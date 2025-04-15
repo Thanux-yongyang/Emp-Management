@@ -1,0 +1,51 @@
+version: '3.8'
+
+volumes:
+  mysql-data:
+
+networks:
+  emp-network:
+    driver: bridge
+
+services:
+  frontend:
+    build: ./Emp-React
+
+    ports:
+      - "80:80"
+    networks:
+      - emp-network
+    depends_on:
+      - backend
+
+  backend:
+    build: ./Emp-Project
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/ems_db?useSSL=false&allowPublicKeyRetrieval=true&autoReconnect=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=employee
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    networks:
+      - emp-network
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0.33
+    environment:
+      - MYSQL_ROOT_PASSWORD=employee
+      - MYSQL_DATABASE=ems_db
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./ems_db.sql:/docker-entrypoint-initdb.d/ems_db.sql
+
+    networks:
+      - emp-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
