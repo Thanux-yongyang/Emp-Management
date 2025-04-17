@@ -28,8 +28,8 @@ services:
     networks:
       - emp-network
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+
 
   db:
     image: mysql:8.0.33
