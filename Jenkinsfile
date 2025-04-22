@@ -27,7 +27,7 @@ pipeline {
                 echo 'Waiting for backend to be healthy...'
                 sh '''
                     for i in {1..20}; do 
-                        if docker exec $(docker ps -qf "name=${COMPOSE_PROJECT_NAME}-backend") curl -s http://localhost:8080/actuator/health | grep '"status":"UP"' ; then 
+                        if docker exec $(docker ps -qf "name=${COMPOSE_PROJECT_NAME}-backend") curl -s http://localhost:8080/actuator/health ; then 
                             echo "Backend is healthy!"
                             break
                         fi

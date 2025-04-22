@@ -1,4 +1,4 @@
-package net.javaguides.ems_backend.exception;
+package com.yongyang.Emp_Project.exception;
 
 import com.yongyang.Emp_Project.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
