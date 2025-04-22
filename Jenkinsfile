@@ -40,7 +40,7 @@ pipeline {
 
         stage('Finally') {
             steps {
-                echo 'Docker is running.'
+                echo 'Docker is successfully running.'
             }
         }
     }
