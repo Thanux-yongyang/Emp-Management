@@ -3,23 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {  Save, Edit2, X } from "lucide-react";
 import axios from "axios";
 import { useEmployees } from "../../context/EmployeeContext"; // ✅ Use the context
+import { useDepartments } from "../../context/DepartmentContext";
 import "./EmployeeDetail.css";
 
-const departments = [
-  "Engineering",
-  "IT",
-  "HR",
-  "Marketing",
-  "Finance",
-  "Operations",
-  "Sales",
-  "Customer Support",
-
-];
+// Remove the hardcoded departments array
+// const departments = [ ... ];
 
 const EmployeeDetail = () => {
   const navigate = useNavigate();
   const { state } = useLocation(); // Retrieve employee data from Router state
+  const { departments, loading: deptLoading, error: deptError } = useDepartments();
 
   //  If no employee data is found, redirect back to the employee list
   if (!state || !state.employee) {
@@ -94,8 +87,6 @@ const EmployeeDetail = () => {
     setFormData((prev) => ({ ...prev, phoneNo: formattedInput })); // Update formData
   };
 
-
-
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this employee?")) {
       return;
@@ -110,239 +101,248 @@ const EmployeeDetail = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-4 md:mx-auto p-4 md:p-4">
-      {/* Header Section */}
-      {/* <div className="mb-6 flex items-center justify-between">
-        <button
-          onClick={() => navigate("/employees")}
-          className="text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 py-4 px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center flex items-center justify-center space-x-4 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <h1 className="text-3xl font-bold text-gray-800 mb-1">Employee Details</h1>
+            <p className="text-gray-600">View and manage employee information</p>
+          </div>
+        </div>
         
-      </div> */}
-      <div className="flex justify-center">
-        <h1 className="text-2xl font-bold mb-6">Employee Details</h1>
-      </div>
-
-      {/* Employee Form */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-            <div className="text-blue-600 font-bold ">Employee Id: {formData.id}</div>
-          <div className="grid grid-cols-2 gap-4">
-            {/* First Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Last Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Employee Information</h2>
+              <div className="text-white/90 font-semibold">ID: {formData.id}</div>
             </div>
           </div>
-
-          {/* Date of Birth & Entry Date */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Date of Entry
-              </label>
-              <input
-                type="date"
-                name="dateOfEntry"
-                value={formData.dateOfEntry}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Gender Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Gender
-            </label>
-            <div className="mt-1 space-x-4">
-              {["male", "female", "other"].map((gender) => (
-                <label key={gender} className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={gender}
-                    checked={formData.gender === gender}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className="form-radio"
-                  />
-                  <span className="ml-2">{gender}</span>
+          
+          <form onSubmit={(e) => e.preventDefault()} className="p-6 space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
                 </label>
-              ))}
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter first name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter last name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender
+                </label>
+                <div className="flex space-x-3">
+                  {["male", "female", "other"].map((gender) => (
+                    <label key={gender} className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={gender}
+                        checked={formData.gender === gender}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        className="form-radio text-purple-600"
+                      />
+                      <span className="ml-1 text-sm capitalize">{gender}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  name="dateOfEntry"
+                  value={formData.dateOfEntry}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+              </div>
+            
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Department
+                </label>
+                <select
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-white border-2 border-purple-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select Department</option>
+                  {deptLoading ? (
+                    <option disabled>Loading...</option>
+                  ) : (
+                    departments.map((dept) => (
+                      <option key={dept.id} value={dept.name}>
+                        {dept.name}
+                      </option>
+                    ))
+                  )}
+                </select>
+                {deptError && <div className="text-red-500 text-sm mt-1">{deptError}</div>}
+              </div>
+              
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter email address"
+                />
+              </div>
+            
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone No
+                </label>
+                <input
+                  type="text"
+                  name="phoneNo"
+                  value={formData.phoneNo}
+                  onChange={formatPhoneNumber}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter phone number"
+                />
+              </div>
+            
+                  <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handlePostalCodeChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="123-4567"
+                />
+              </div>
+           
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter main address"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  City/Street/Building/Room No
+                </label>
+                <input
+                  type="text"
+                  name="subAddress"
+                  value={formData.subAddress}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="w-full px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter sub address"
+                />
+              </div>
+        
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Postal Code
-              </label>
-              <input
-                type="text"
-                name="postalCode"
-                value={formData.postalCode}
-                onChange={handlePostalCodeChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Street Address
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Department
-              </label>
-              <select
-                name="department"
-                value={formData.department}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Department</option>
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Sub Address (Room No, etc.)
-              </label>
-              <input
-                type="text"
-                name="subAddress"
-                value={formData.subAddress}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+           
 
-          {/* Phone Number & Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              disabled={!isEditing}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Phone No
-            </label>
-            <input
-              type="text"
-              name="phoneNo"
-              value={formData.phoneNo}
-              onChange={formatPhoneNumber}
-              disabled={!isEditing}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <div className="flex justify-end space-x-4">
-            <div className="flex gap-2">
+            <div className="flex justify-end space-x-3 pt-4">
               {isEditing ? (
                 <>
                   <button
-                    onClick={handleSave}
-                    className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                    onClick={handleCancel}
+                    className="px-5 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
                   >
-                    <Save className="h-4 w-4" />
-                    Save
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
                   </button>
                   <button
-                    onClick={handleCancel}
-                    className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                    onClick={handleSave}
+                    className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
                   >
-                    <X className="h-4 w-4" />
-                    Cancel
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
                   </button>
                 </>
               ) : (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
                 >
-                  <Edit2 className="h-4 w-4" />
+                  <Edit2 className="w-4 h-4 mr-2" />
                   Edit
                 </button>
               )}
               <button
                 onClick={handleDelete}
-                className="flex items-center px-4 py-2 gap-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600"
+                className="px-5 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
               >
-                <Edit2 className="h-4 w-4" />
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
                 Delete
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

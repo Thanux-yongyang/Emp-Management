@@ -10,7 +10,7 @@ export const Home = () => {
   const departments = [...new Set(employees.map(emp => emp.department))];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4">
       {/* Hero Section */}
       <div 
         className="relative rounded-xl overflow-hidden h-64 mb-8"

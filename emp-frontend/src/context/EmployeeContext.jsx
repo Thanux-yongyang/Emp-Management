@@ -79,6 +79,20 @@ export const EmployeeProvider = ({ children }) => {
     }
   };
 
+  // Search employees
+const searchEmployees = async (query) => {
+  try {
+    const response = await axios.get(
+      `${import.meta.env.VITE_BACKEND_URL}/api/employees/search?query=${encodeURIComponent(query)}`
+    );
+    return response.data; // array of matched employees
+  } catch (error) {
+    handleError(error, "Failed to search employees.");
+    return [];
+  }
+};
+
+
   // Context value
   const value = {
     employees,
@@ -88,6 +102,7 @@ export const EmployeeProvider = ({ children }) => {
     addEmployee,
     updateEmployee,
     deleteEmployee,
+    searchEmployees,
     fetchEmployees // In case you need to refresh the list
   };
 
