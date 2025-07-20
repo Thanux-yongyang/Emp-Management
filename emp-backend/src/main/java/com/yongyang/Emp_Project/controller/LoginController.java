@@ -1,18 +1,21 @@
 package com.yongyang.Emp_Project.controller;
 
 
+import com.yongyang.Emp_Project.dto.LoginRequestDto;
 import com.yongyang.Emp_Project.entity.User;
 import com.yongyang.Emp_Project.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-public class UserController {
+@CrossOrigin(origins = "*")
+public class LoginController {
     @Autowired
     private UserService userService;
 
-    public User login(@RequestBody LoginR)
+    @PostMapping("/login")
+    public User login(@RequestBody LoginRequestDto loginRequestDto){
+        return userService.login(loginRequestDto.getUsername(),loginRequestDto.getPassword());
+    }
 }

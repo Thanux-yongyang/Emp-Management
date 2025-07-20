@@ -74,4 +74,20 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
     }
+
+    @Override
+    public List<EmployeeDto> searchEmployees(String query) {
+        try {
+            Long id = Long.parseLong(query);
+            return employeeRepository.findById(id)
+                    .map(emp -> List.of(EmployeeMapper.toDTO(emp)))
+                    .orElse(List.of());
+        } catch (NumberFormatException e) {
+            // If it's not a number, search by name
+            List<Employee> matched = employeeRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(query, query);
+            return matched.stream().map(EmployeeMapper::toDTO).collect(Collectors.toList());
+
+        }
+    }
+
 }

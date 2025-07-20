@@ -40,6 +40,13 @@ public class EmployeeController {
         employeeService.deleteEmployee(id);
         return new ResponseEntity<>("Employee deleted successfully",HttpStatus.OK);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<EmployeeDto>> searchEmployees(@RequestParam("query") String query) {
+        List<EmployeeDto> matchedEmployees = employeeService.searchEmployees(query);
+        return new ResponseEntity<>(matchedEmployees, HttpStatus.OK);
+    }
+
 }
 
 
