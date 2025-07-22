@@ -21,17 +21,24 @@ const EmployeeDetail = () => {
   }
 
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(state.employee); // Use passed data
+  // Ensure department is stored as id (string or number)
+  const [formData, setFormData] = useState({
+    ...state.employee,
+    department: departments.find(d => d.name === state.employee.department)?.id || state.employee.department
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  const {updateEmployee , deleteEmployee} = useEmployees(); // ✅ Use `useEmployees` hook
+  const {updateEmployee , deleteEmployee} = useEmployees();
   const handleSave = async () => {
     try {
-      await updateEmployee(formData.id, formData)
-      
+      // When saving, send department as id
+      await updateEmployee(formData.id, {
+        ...formData,
+        department: formData.department
+      });
       alert("Employee details updated successfully!");
       setIsEditing(false);
     } catch (error) {
@@ -41,7 +48,10 @@ const EmployeeDetail = () => {
   };
 
   const handleCancel = () => {
-    setFormData(state.employee); // Reset form data to original values
+    setFormData({
+      ...state.employee,
+      department: departments.find(d => d.name === state.employee.department)?.id || state.employee.department
+    });
     setIsEditing(false);
   };
 
@@ -99,6 +109,10 @@ const EmployeeDetail = () => {
       alert("Failed to delete employee.");
     }
   };
+
+  // Find department name for display
+  const deptObj = departments.find(d => d.id === formData.department);
+  const deptName = deptObj ? deptObj.name : '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 py-4 px-4">
@@ -217,13 +231,17 @@ const EmployeeDetail = () => {
                     <option disabled>Loading...</option>
                   ) : (
                     departments.map((dept) => (
-                      <option key={dept.id} value={dept.name}>
+                      <option key={dept.id} value={dept.id}>
                         {dept.name}
                       </option>
                     ))
                   )}
                 </select>
                 {deptError && <div className="text-red-500 text-sm mt-1">{deptError}</div>}
+                {/* Show department name when not editing */}
+                {!isEditing && deptName && (
+                  <div className="text-sm text-gray-500 mt-1">Department: {deptName}</div>
+                )}
               </div>
               
               

@@ -22,7 +22,8 @@ export const DepartmentProvider = ({ children }) => {
     setError('');
     try {
       const res = await axios.get('/api/departments');
-      setDepartments(res.data);
+      // Map departmentName to name for all departments
+      setDepartments(res.data.map(d => ({ ...d, name: d.departmentName })));
     } catch (err) {
       setError('Failed to fetch departments');
     } finally {

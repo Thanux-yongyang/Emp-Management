@@ -2,10 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Trash2, Eye } from "lucide-react"; // Changed View to Eye for a more common icon
 import { useEmployees } from "../../context/EmployeeContext";
+import { useDepartments } from "../../context/DepartmentContext";
 
 const EmployeeList = () => {
   const navigate = useNavigate();
   const { employees, loading, error, deleteEmployee } = useEmployees();
+  const { departments } = useDepartments();
 
   const handleDoubleClick = (employee) => {
     navigate(`/employee/view/${employee.id}`, { state: { employee } });
@@ -77,7 +79,9 @@ const EmployeeList = () => {
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{employee.id}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{`${employee.firstName} ${employee.lastName}`}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{employee.department}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {departments.find(d => d.id === employee.department)?.name || ''}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{employee.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{employee.phoneNo}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

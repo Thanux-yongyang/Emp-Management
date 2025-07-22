@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Save, Edit2, X, DollarSign, Calculator, ArrowLeft } from "lucide-react";
+import { Save, Edit2, X, DollarSign, Calculator, ArrowLeft, PlusCircle } from "lucide-react";
 import axios from "axios";
-import { useEmployees } from "../../context/EmployeeContext";
+import { useEmpSalaries } from "../../context/EmpSalaryContext";
 
 const salaryTypes = [
   "Monthly",
@@ -32,54 +32,94 @@ const taxBrackets = [
 const SalaryDetail = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const employee = state?.employee;
 
-  // If no employee data is found, redirect back to the employee list
-  if (!state || !state.employee) {
-    navigate("/salary");
+  if (!employee) {
+    useEffect(() => {
+      navigate("/salary");
+    }, [navigate]);
     return null;
   }
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    employeeId: state.employee.id,
-    employeeName: `${state.employee.firstName} ${state.employee.lastName}`,
-    department: state.employee.department,
-    baseSalary: state.employee.salary || 0,
-    salaryType: "Monthly",
-    allowances: {
-      housing: 0,
-      transport: 0,
-      meals: 0,
-      communication: 0,
-      overtime: 0,
-      bonus: 0
-    },
-    deductions: {
-      incomeTax: 0,
-      healthInsurance: 0,
-      employmentInsurance: 0,
-      pensionInsurance: 0,
-      longTermCare: 0,
-      other: 0
-    },
-    paymentMethod: "Bank Transfer",
-    bankDetails: {
-      bankName: "",
-      branchName: "",
-      accountType: "Savings",
-      accountNumber: ""
-    },
-    effectiveDate: new Date().toISOString().split('T')[0],
-    lastUpdated: new Date().toISOString().split('T')[0]
-  });
+  const {
+    loading,
+    error,
+    fetchSalaryHistory,
+    createSalary,
+    updateSalary,
+  } = useEmpSalaries();
 
-  const { updateEmployee } = useEmployees();
+  const [isEditing, setIsEditing] = useState(false);
+  const [salaryHistory, setSalaryHistory] = useState([]);
+  const [selectedSalaryIndex, setSelectedSalaryIndex] = useState(0);
+  const [isNewRecord, setIsNewRecord] = useState(false);
+  const [formData, setFormData] = useState(null);
+
+  useEffect(() => {
+    const loadSalaryHistory = async () => {
+      const history = await fetchSalaryHistory(employee.id);
+      if (history.length > 0) {
+        setSalaryHistory(history);
+        setFormData(mapApiToFormData(history[0]));
+      } else {
+        // No history, prepare a new record form
+        handleAddNew();
+      }
+    };
+    loadSalaryHistory();
+  }, [employee.id]);
+  
+  useEffect(() => {
+    if (salaryHistory.length > 0 && !isNewRecord) {
+      const currentSalary = salaryHistory[selectedSalaryIndex];
+      setFormData(mapApiToFormData(currentSalary));
+    }
+  }, [selectedSalaryIndex, salaryHistory, isNewRecord]);
+
+  const mapApiToFormData = (apiData) => {
+    if (!apiData) return null;
+    return {
+      salid: apiData.salid,
+      employeeId: apiData.empid || employee.id, // <-- Use empid from API or fallback to employee.id
+      employeeName: `${employee.firstName} ${employee.lastName}`,
+      department: employee.department,
+      baseSalary: apiData.baseSalary || 0,
+      salaryType: apiData.salaryType || "Monthly",
+      allowances: {
+        housing: apiData.housingAllowance || 0,
+        transport: apiData.transportAllowance || 0,
+        meals: apiData.mealAllowance || 0,
+        communication: apiData.communicationAllowance || 0,
+        overtime: apiData.overtimeAllowance || 0,
+        bonus: apiData.bonusAllowance || 0,
+      },
+      deductions: {
+        incomeTax: apiData.incomeTax || 0,
+        healthInsurance: apiData.healthInsurance || 0,
+        employmentInsurance: apiData.employmentInsurance || 0,
+        pensionInsurance: apiData.pensionInsurance || 0,
+        longTermCare: apiData.longtermCare || 0,
+        other: apiData.other || 0,
+      },
+      paymentMethod: apiData.paymentMethod || "Bank Transfer",
+      bankDetails: {
+        bankName: apiData.bankName || "",
+        branchName: apiData.branchName || "",
+        accountType: apiData.accountType || "Savings",
+        accountNumber: apiData.accountNumber || "",
+      },
+      effectiveDate: apiData.effectiveDate ? new Date(apiData.effectiveDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+  };
 
   const calculateTotalAllowances = () => {
+    if (!formData) return 0;
     return Object.values(formData.allowances).reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
   };
 
   const calculateTotalDeductions = () => {
+    if (!formData) return 0;
     return Object.values(formData.deductions).reduce((sum, value) => sum + (parseFloat(value) || 0), 0);
   };
 
@@ -99,10 +139,10 @@ const SalaryDetail = () => {
   };
 
   const calculateNetSalary = () => {
+    if (!formData) return 0;
     const baseSalary = parseFloat(formData.baseSalary) || 0;
     const totalAllowances = calculateTotalAllowances();
     const totalDeductions = calculateTotalDeductions();
-    
     return baseSalary + totalAllowances - totalDeductions;
   };
 
@@ -147,68 +187,151 @@ const SalaryDetail = () => {
     }
   };
 
-  const handleSave = async () => {
-    try {
-      // You would typically save this to a separate salary table
-      // For now, we'll just update the employee's salary field
-      await updateEmployee(formData.employeeId, { 
-        salary: parseFloat(formData.baseSalary) 
-      });
-      
-      alert("Salary details updated successfully!");
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Error updating salary details:", error);
-      alert("Failed to update salary details.");
+  const getNextMonthFirstDay = () => {
+    const now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth() + 1; // next month (0-based)
+    if (month > 11) {
+      year += 1;
+      month = 0;
     }
+    // month is 0-based for Date, but 1-based for formatting
+    return `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  };
+
+  const isEditableMonth = (dateStr) => {
+    if (!dateStr) return false;
+    const now = new Date();
+    const recordDate = new Date(dateStr);
+    // Editable if recordDate is after the last day of the current month
+    return (
+      recordDate.getFullYear() > now.getFullYear() ||
+      (recordDate.getFullYear() === now.getFullYear() && recordDate.getMonth() > now.getMonth())
+    );
+  };
+
+  const handleSave = async () => {
+    const totalAllowance = calculateTotalAllowances();
+    const totalDeduction = calculateTotalDeductions();
+    const netSalary = calculateNetSalary();
+
+    // Only allow saving for next month or later
+    const recordDate = new Date(formData.effectiveDate);
+    const now = new Date();
+    if (
+      recordDate.getFullYear() < now.getFullYear() ||
+      (recordDate.getFullYear() === now.getFullYear() && recordDate.getMonth() <= now.getMonth())
+    ) {
+      alert("You can only create or edit salary details for next month or later.");
+      return;
+    }
+
+    const payload = {
+      empid: formData.employeeId, // <-- Correct field for your backend!
+      baseSalary: parseFloat(formData.baseSalary),
+      salaryType: formData.salaryType,
+      effectiveDate: formData.effectiveDate,
+      housingAllowance: parseFloat(formData.allowances.housing) || 0,
+      transportAllowance: parseFloat(formData.allowances.transport) || 0,
+      mealAllowance: parseFloat(formData.allowances.meals) || 0,
+      communicationAllowance: parseFloat(formData.allowances.communication) || 0,
+      overtimeAllowance: parseFloat(formData.allowances.overtime) || 0,
+      bonusAllowance: parseFloat(formData.allowances.bonus) || 0,
+      totalAllowance,
+      incomeTax: parseFloat(formData.deductions.incomeTax) || 0,
+      healthInsurance: parseFloat(formData.deductions.healthInsurance) || 0,
+      employmentInsurance: parseFloat(formData.deductions.employmentInsurance) || 0,
+      pensionInsurance: parseFloat(formData.deductions.pensionInsurance) || 0,
+      longtermCare: parseFloat(formData.deductions.longTermCare) || 0,
+      other: parseFloat(formData.deductions.other) || 0,
+      totalDeduction,
+      netSalary,
+      paymentMethod: formData.paymentMethod,
+      bankName: formData.bankDetails.bankName,
+      branchName: formData.bankDetails.branchName,
+      accountType: formData.bankDetails.accountType,
+      accountNumber: formData.bankDetails.accountNumber,
+    };
+
+    try {
+      if (isNewRecord || !formData.salid) {
+        await createSalary(payload);
+        alert('Salary record created successfully!');
+      } else {
+        await updateSalary(formData.salid, payload);
+        alert('Salary details updated successfully!');
+      }
+      setIsEditing(false);
+      setIsNewRecord(false);
+      // Refresh history
+      const history = await fetchSalaryHistory(employee.id);
+      setSalaryHistory(history);
+      setSelectedSalaryIndex(0); // Go back to the latest record
+    } catch (error) {
+      console.error("Error saving salary details:", error);
+      alert("Failed to save salary details.");
+    }
+  };
+  
+  const handleAddNew = () => {
+    const nextMonthDate = getNextMonthFirstDay();
+    const alreadyExists = salaryHistory.some(
+      record => record.effectiveDate && record.effectiveDate.slice(0, 7) === nextMonthDate.slice(0, 7)
+    );
+    if (alreadyExists) {
+      alert('A salary record for next month already exists. You cannot create a duplicate.');
+      return;
+    }
+    setIsNewRecord(true);
+    setIsEditing(true);
+    setFormData({
+      ...mapApiToFormData({}),
+      effectiveDate: nextMonthDate, // Only next month
+    });
   };
 
   const handleCancel = () => {
-    // Reset to original values - you'd fetch from API in real app
     setIsEditing(false);
+    setIsNewRecord(false);
+    // If we were adding a new one and canceled, go back to the latest existing record
+    if (salaryHistory.length > 0) {
+      setSelectedSalaryIndex(0);
+      setFormData(mapApiToFormData(salaryHistory[0]));
+    } else {
+       navigate('/salary'); // No records exist, go back
+    }
+  };
+
+  const handlePrevMonth = () => {
+    setSelectedSalaryIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+  const handleNextMonth = () => {
+    setSelectedSalaryIndex((prev) => (prev < salaryHistory.length - 1 ? prev + 1 : prev));
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ja-JP', {
-      style: 'currency',
-      currency: 'JPY',
-      minimumFractionDigits: 0
-    }).format(amount || 0);
+    return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY', minimumFractionDigits: 0 }).format(amount || 0);
   };
 
-  // Dummy month-wise salary data
-  const dummySalaryHistory = [
-    {
-      month: "2024-01",
-      baseSalary: 300000,
-      allowances: 20000,
-      deductions: 10000,
-      netSalary: 310000,
-    },
-    {
-      month: "2024-02",
-      baseSalary: 310000,
-      allowances: 25000,
-      deductions: 12000,
-      netSalary: 323000,
-    },
-    {
-      month: "2024-03",
-      baseSalary: 320000,
-      allowances: 18000,
-      deductions: 11000,
-      netSalary: 327000,
-    },
-  ];
+  if (loading && !formData) return <div className="text-center p-8">Loading salary details...</div>;
+  if (error) return <div className="text-center p-8 text-red-500">{error}</div>;
+  if (!formData) return <div className="text-center p-8">No salary data found for this employee. Click "Add New Record".</div>;
 
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
-  const selectedMonthSalary = dummySalaryHistory[selectedMonthIndex];
+  // Safely get the selected record to prevent crashes
+  const selectedSalaryRecord = isNewRecord ? null : salaryHistory[selectedSalaryIndex];
 
-  const handlePrevMonth = () => {
-    setSelectedMonthIndex((prev) => (prev > 0 ? prev - 1 : prev));
-  };
-  const handleNextMonth = () => {
-    setSelectedMonthIndex((prev) => (prev < dummySalaryHistory.length - 1 ? prev + 1 : prev));
+  const selectedMonthSalary = isNewRecord ? {
+    month: "New Record",
+    baseSalary: formData.baseSalary,
+    allowances: calculateTotalAllowances(),
+    deductions: calculateTotalDeductions(),
+    netSalary: calculateNetSalary(),
+  } : {
+    month: selectedSalaryRecord?.effectiveDate?.substring(0, 7) || "N/A",
+    baseSalary: selectedSalaryRecord?.baseSalary || 0,
+    allowances: selectedSalaryRecord?.totalAllowance || 0,
+    deductions: selectedSalaryRecord?.totalDeduction || 0,
+    netSalary: selectedSalaryRecord?.netSalary || 0,
   };
 
   return (
@@ -250,9 +373,9 @@ const SalaryDetail = () => {
                 <h3 className="text-xl font-bold text-gray-800">Salary Summary</h3>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={handlePrevMonth}
+                    onClick={handleNextMonth} // Go to older record (index + 1)
                     type="button"
-                    disabled={selectedMonthIndex === 0}
+                    disabled={isNewRecord || selectedSalaryIndex >= salaryHistory.length - 1}
                     className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
                   >
                     ◀
@@ -261,9 +384,9 @@ const SalaryDetail = () => {
                     {selectedMonthSalary.month}
                   </span>
                   <button
-                    onClick={handleNextMonth}
+                    onClick={handlePrevMonth} // Go to newer record (index - 1)
                     type="button"
-                    disabled={selectedMonthIndex === dummySalaryHistory.length - 1}
+                    disabled={isNewRecord || selectedSalaryIndex === 0}
                     className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
                   >
                     ▶
@@ -345,7 +468,7 @@ const SalaryDetail = () => {
                     name="effectiveDate"
                     value={formData.effectiveDate}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
+                    disabled={isNewRecord || !isEditableMonth(formData.effectiveDate) || !isEditing}
                     className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -514,33 +637,36 @@ const SalaryDetail = () => {
 
            
 
-            <div className="flex justify-end space-x-3 pt-4">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={handleCancel}
-                    className="px-5 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit
-                </button>
-              )}
+            <div className="flex justify-between items-center pt-4">
+              <button
+                type="button"
+                onClick={handleAddNew}
+                className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Add New Record
+              </button>
+              <div className="flex space-x-3">
+                {isEditing ? (
+                  <>
+                    <button onClick={handleCancel} className="px-5 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center" >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                      </button>
+                    <button onClick={handleSave} className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center" >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save
+                      </button>
+                  </>
+                ) : (
+                  !isNewRecord && isEditableMonth(formData.effectiveDate) && (
+                    <button onClick={() => setIsEditing(true)} className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center" >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit
+                    </button>
+                  )
+                )}
+              </div>
             </div>
           </form>
         </div>

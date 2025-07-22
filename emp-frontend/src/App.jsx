@@ -17,6 +17,7 @@ import Attendance from './components/Attendance/Attendance';
  import  EmpSalaryList  from './components/salarydetail/EmpSalaryList';
  import AttendanceDetail from './components/Attendance/AttendanceDetail';
 import {DepartmentProvider} from './context/DepartmentContext';
+import { EmpSalaryProvider } from './context/EmpSalaryContext';
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
       <AuthProvider>
       <EmployeeProvider>
         <DepartmentProvider>
+          <EmpSalaryProvider>
             <Routes>
               <Route path='/' element={<LoginForm/>}/>
               <Route element={<ProtectedLayout />}>
@@ -44,6 +46,7 @@ function App() {
              
               </Route>
             </Routes>
+          </EmpSalaryProvider>
             </DepartmentProvider>
       </EmployeeProvider>
       </AuthProvider>

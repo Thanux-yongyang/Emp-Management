@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react"; // Changed View to Eye for a more common icon
 import { useEmployees } from "../../context/EmployeeContext";
-import { useEffect, useState, useRef } from "react";
+import { useDepartments } from "../../context/DepartmentContext";
+import { useEffect, useRef } from "react";
 
 const EmpSalaryList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const navigate = useNavigate();
   const { employees, loading, error, deleteEmployee } = useEmployees();
+  const { departments } = useDepartments();
 
   const handleDoubleClick = (employee) => {
     navigate(`/salarydetail`, { state: { employee } });
@@ -144,7 +146,7 @@ const EmpSalaryList = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{`${employee.firstName} ${employee.lastName}`}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {employee.department}
+                            {departments.find(d => d.id == employee.department || d.name === employee.department)?.name || ''}
                           </td>
 
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
