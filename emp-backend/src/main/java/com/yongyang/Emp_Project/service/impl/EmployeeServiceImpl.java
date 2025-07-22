@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.yongyang.Emp_Project.entity.Department;
 
 @Service
 @AllArgsConstructor
@@ -46,7 +47,13 @@ public class EmployeeServiceImpl implements EmployeeService {
             existingEmployee.setAddress(employeeDto.getAddress());
             existingEmployee.setSubAddress(employeeDto.getSubAddress());
             existingEmployee.setPostalCode(employeeDto.getPostalCode());
-            existingEmployee.setDepartment(employeeDto.getDepartment());
+            Long deptId = employeeDto.getDepartment();
+            Department department = null;
+            if (deptId != null) {
+                department = new Department();
+                department.setId(deptId);
+            }
+            existingEmployee.setDepartment(department);
             existingEmployee.setEmail(employeeDto.getEmail());
             existingEmployee.setPhoneNo(employeeDto.getPhoneNo());
 

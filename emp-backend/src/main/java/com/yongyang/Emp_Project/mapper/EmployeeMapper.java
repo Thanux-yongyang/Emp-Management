@@ -2,6 +2,7 @@ package com.yongyang.Emp_Project.mapper;
 
 import com.yongyang.Emp_Project.dto.EmployeeDto;
 import com.yongyang.Emp_Project.entity.Employee;
+import com.yongyang.Emp_Project.entity.Department;
 
 public class EmployeeMapper {
     public static EmployeeDto toDTO(Employee employee){
@@ -15,12 +16,17 @@ public class EmployeeMapper {
                 employee.getPostalCode(),
                 employee.getAddress(),
                 employee.getSubAddress(),
-                employee.getDepartment(),
+                employee.getDepartment() != null ? employee.getDepartment().getId() : null,
                 employee.getEmail(),
                 employee.getPhoneNo()
         );
     }
     public static Employee toEntity(EmployeeDto dto){
+        Department department = null;
+        if (dto.getDepartment() != null) {
+            department = new Department();
+            department.setId(dto.getDepartment());
+        }
         return new Employee(
                 dto.getId(),
                 dto.getFirstName(),
@@ -31,7 +37,7 @@ public class EmployeeMapper {
                 dto.getPostalCode(),
                 dto.getAddress(),
                 dto.getSubAddress(),
-                dto.getDepartment(),
+                department,
                 dto.getEmail(),
                 dto.getPhoneNo()
         );

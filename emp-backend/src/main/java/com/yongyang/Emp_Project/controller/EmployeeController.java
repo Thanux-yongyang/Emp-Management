@@ -2,7 +2,7 @@ package com.yongyang.Emp_Project.controller;
 
 import com.yongyang.Emp_Project.dto.EmployeeDto;
 import com.yongyang.Emp_Project.service.EmployeeService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 

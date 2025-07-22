@@ -20,6 +20,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/employees/**").permitAll()// 👈 Allow user creation without login
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/departments/**").permitAll()
+                        .requestMatchers("/api/empsalaries/**").permitAll()
                         .anyRequest().authenticated()                   // all other routes require login
                 );
         return http.build();

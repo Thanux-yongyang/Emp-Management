@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
+
 import java.util.Date;
 
 @Getter
@@ -24,7 +26,7 @@ public class EmployeeDto {
     private String postalCode;
     private String address;
     private String subAddress;
-    private String department;
+    private Long department;
     private String email;
     private String phoneNo;
 }

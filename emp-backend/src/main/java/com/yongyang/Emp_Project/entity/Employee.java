@@ -36,8 +36,9 @@ public class Employee {
     private String address;
     @Column(name = "sub_address", nullable = false)
     private String subAddress;
-    @Column(name = "department", nullable = false)
-    private String department;
+    @ManyToOne
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
     @Column(name = "email", nullable = false)
     private  String email;
     @Column(name = "phone_No",nullable = false, unique = true)
