@@ -11,4 +11,5 @@ import java.util.List;
 public interface EmpSalaryRepository extends JpaRepository<EmpSalary, Long> {
     Optional<EmpSalary> findByEmployee_Id(Long employeeId);
     List<EmpSalary> findAllByEmployee_Id(Long employeeId);
+    boolean existsByEmployee_IdAndEffectiveDate(Long employeeId, java.util.Date effectiveDate);
 }

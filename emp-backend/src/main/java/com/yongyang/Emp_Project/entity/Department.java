@@ -20,7 +20,9 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "department_name" , nullable = false)
+    @Column(name = "department_name" , 
+    
+    nullable = false)
     private String departmentName;
 
 }

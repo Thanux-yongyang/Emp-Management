@@ -25,15 +25,18 @@ public class EmpSalaryServiceImpl implements EmpSalaryService {
 
     @Override
     public EmpSalaryDto createEmpSalary(EmpSalaryDto empSalaryDto) {
-        // Only allow for next month
+        // Allow for any future month, but not current or past
         LocalDate effectiveDate = empSalaryDto.getEffectiveDate()
             .toInstant()
             .atZone(ZoneId.systemDefault())
             .toLocalDate();
-        LocalDate firstOfNextMonth = LocalDate.now().withDayOfMonth(1).plusMonths(1);
-        if (effectiveDate.getYear() != firstOfNextMonth.getYear() ||
-            effectiveDate.getMonth() != firstOfNextMonth.getMonth()) {
-            throw new RuntimeException("Can only create or update salary for next month.");
+        LocalDate now = LocalDate.now().withDayOfMonth(1);
+        if (!effectiveDate.isAfter(now)) {
+            throw new RuntimeException("Can only create salary for a future month.");
+        }
+        // Prevent duplicate for same employee and month
+        if (empSalaryRepository.existsByEmployee_IdAndEffectiveDate(empSalaryDto.getEmpid(), empSalaryDto.getEffectiveDate())) {
+            throw new RuntimeException("A salary record for this employee and month already exists.");
         }
         EmpSalary empSalary = EmpSalaryMapper.toEntity(empSalaryDto);
         if (empSalaryDto.getEmpid() != null) {
