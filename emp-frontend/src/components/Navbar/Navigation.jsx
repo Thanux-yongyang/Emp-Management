@@ -44,6 +44,8 @@ export const Navigation = () => {
 
           <Divider />
           <NavItem to="/settings" icon={<Settings size={20} />} label="Account Settings" />
+          <Divider />
+          <NavItem to="/clockinout" icon={<Settings size={20} />} label="Clock " />
         </ul>
       </div>
 

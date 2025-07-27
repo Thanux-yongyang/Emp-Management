@@ -18,6 +18,12 @@ import Attendance from './components/Attendance/Attendance';
  import AttendanceDetail from './components/Attendance/AttendanceDetail';
 import {DepartmentProvider} from './context/DepartmentContext';
 import { EmpSalaryProvider } from './context/EmpSalaryContext';
+import EmpClockInOut from './components/Attendance/EmpClockInOut';
+import {LoginManage} from './components/Attendance/AttendanceLoginManage';
+import { AttendanceLoginProvider } from './context/AttendanceLoginContext';
+import  SuccessfullLogin  from './components/Attendance/SuccessfullLogin';
+
+
 
 
 function App() {
@@ -27,8 +33,11 @@ function App() {
       <EmployeeProvider>
         <DepartmentProvider>
           <EmpSalaryProvider>
+           
             <Routes>
               <Route path='/' element={<LoginForm/>}/>
+              <Route path= "/clockinout" element={<EmpClockInOut/>}/>
+             <Route path="/successfull-login" element={<SuccessfullLogin />} />
               <Route element={<ProtectedLayout />}>
 
               <Route path="/home" element={<Home />} />
@@ -43,9 +52,16 @@ function App() {
               <Route path="/departments" element={<Departments />} />
               <Route path="/salarydetail" element={<SalaryDetail />} />
               <Route path="/attendance/detail/:id" element={<AttendanceDetail />} />
+              
+              <Route path="/attendance/create-logins" element={
+                 <AttendanceLoginProvider>
+                  <LoginManage/>
+                 </AttendanceLoginProvider>
+                }/>
              
               </Route>
             </Routes>
+            
           </EmpSalaryProvider>
             </DepartmentProvider>
       </EmployeeProvider>

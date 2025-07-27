@@ -54,6 +54,13 @@ const SalaryDetail = () => {
   const [selectedSalaryIndex, setSelectedSalaryIndex] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [formData, setFormData] = useState(null);
+  const [newMonthError, setNewMonthError] = useState("");
+  const [disableInputs, setDisableInputs] = useState(false);
+
+  // Helper: Get all existing months (YYYY-MM) from salaryHistory
+  const existingMonths = salaryHistory.map(
+    record => record.effectiveDate && record.effectiveDate.slice(0, 7)
+  );
 
   useEffect(() => {
     const loadSalaryHistory = async () => {
@@ -215,22 +222,33 @@ const SalaryDetail = () => {
     const totalDeduction = calculateTotalDeductions();
     const netSalary = calculateNetSalary();
 
-    // Only allow saving for next month or later
+    // Only allow saving for future months and not duplicate months
     const recordDate = new Date(formData.effectiveDate);
     const now = new Date();
+    const selectedMonth = formData.effectiveDate.slice(0, 7);
     if (
       recordDate.getFullYear() < now.getFullYear() ||
       (recordDate.getFullYear() === now.getFullYear() && recordDate.getMonth() <= now.getMonth())
     ) {
-      alert("You can only create or edit salary details for next month or later.");
+      alert("You can only create or edit salary details for following months.");
       return;
+    }
+    if (existingMonths.includes(selectedMonth) && (isNewRecord || !formData.salid)) {
+      alert("A salary record for this month already exists.");
+      return;
+    }
+
+    // Ensure effectiveDate is a full date string (YYYY-MM-DD)
+    let effectiveDate = formData.effectiveDate;
+    if (/^\d{4}-\d{2}$/.test(effectiveDate)) {
+      effectiveDate = effectiveDate + "-01";
     }
 
     const payload = {
       empid: formData.employeeId, // <-- Correct field for your backend!
       baseSalary: parseFloat(formData.baseSalary),
       salaryType: formData.salaryType,
-      effectiveDate: formData.effectiveDate,
+      effectiveDate, // use the fixed value
       housingAllowance: parseFloat(formData.allowances.housing) || 0,
       transportAllowance: parseFloat(formData.allowances.transport) || 0,
       mealAllowance: parseFloat(formData.allowances.meals) || 0,
@@ -274,20 +292,45 @@ const SalaryDetail = () => {
   };
   
   const handleAddNew = () => {
-    const nextMonthDate = getNextMonthFirstDay();
-    const alreadyExists = salaryHistory.some(
-      record => record.effectiveDate && record.effectiveDate.slice(0, 7) === nextMonthDate.slice(0, 7)
-    );
-    if (alreadyExists) {
-      alert('A salary record for next month already exists. You cannot create a duplicate.');
-      return;
-    }
     setIsNewRecord(true);
     setIsEditing(true);
+    setDisableInputs(false);
     setFormData({
       ...mapApiToFormData({}),
-      effectiveDate: nextMonthDate, // Only next month
+      effectiveDate: "", // Let user pick
     });
+    setNewMonthError("");
+  };
+
+  // New: handle month picking for new record
+  const handleEffectiveDateChange = (e) => {
+    const value = e.target.value;
+    const selectedMonth = value.slice(0, 7);
+    const now = new Date();
+    const selectedDate = new Date(value + "-01");
+    // Only allow future months
+    if (
+      selectedDate.getFullYear() < now.getFullYear() ||
+      (selectedDate.getFullYear() === now.getFullYear() && selectedDate.getMonth() <= now.getMonth())
+    ) {
+      setNewMonthError("You can only create salary records for future months.");
+      setDisableInputs(true);
+      setFormData(prev => ({ ...prev, effectiveDate: value }));
+      return;
+    }
+    if (existingMonths.includes(selectedMonth)) {
+      setNewMonthError("A salary record for this month already exists.");
+      setDisableInputs(true);
+      setFormData(prev => ({ ...prev, effectiveDate: value }));
+    } else {
+      setNewMonthError("");
+      setDisableInputs(false);
+      // Reset form to original (empty) state for the selected month
+      setFormData({
+        ...mapApiToFormData({}),
+        effectiveDate: value
+      });
+    }
   };
 
   const handleCancel = () => {
@@ -436,7 +479,7 @@ const SalaryDetail = () => {
                     name="baseSalary"
                     value={formData.baseSalary}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
+                    disabled={disableInputs || !isEditing}
                     className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Enter base salary"
                   />
@@ -449,7 +492,7 @@ const SalaryDetail = () => {
                     name="salaryType"
                     value={formData.salaryType}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
+                    disabled={disableInputs || !isEditing}
                     className="w-full px-3 py-2 bg-white border-2 border-green-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {salaryTypes.map((type) => (
@@ -463,14 +506,36 @@ const SalaryDetail = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Effective Date
                   </label>
-                  <input
-                    type="date"
-                    name="effectiveDate"
-                    value={formData.effectiveDate}
-                    onChange={handleInputChange}
-                    disabled={isNewRecord || !isEditableMonth(formData.effectiveDate) || !isEditing}
-                    className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
+                  {isNewRecord ? (
+                    <>
+                      <input
+                        type="month"
+                        name="effectiveDate"
+                        value={formData.effectiveDate ? formData.effectiveDate.slice(0, 7) : ""}
+                        onChange={handleEffectiveDateChange}
+                        disabled={false}
+                        className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                      />
+                      {/* Show the full date below the month picker */}
+                      {formData.effectiveDate && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Full effective date: <span className="font-mono">{/^\d{4}-\d{2}$/.test(formData.effectiveDate) ? formData.effectiveDate + "-01" : formData.effectiveDate}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="date"
+                      name="effectiveDate"
+                      value={formData.effectiveDate}
+                      onChange={handleInputChange}
+                      disabled={disableInputs || !isEditableMonth(formData.effectiveDate) || !isEditing}
+                      className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  )}
+                  {isNewRecord && newMonthError && (
+                    <div className="text-red-600 text-xs mt-1">{newMonthError}</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -491,7 +556,7 @@ const SalaryDetail = () => {
                       name={`allowances.${key}`}
                       value={value}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={disableInputs || !isEditing}
                       className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="0"
                     />
@@ -532,7 +597,7 @@ const SalaryDetail = () => {
                       name={`deductions.${key}`}
                       value={value}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={disableInputs || !isEditing}
                       className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="0"
                     />
@@ -560,7 +625,7 @@ const SalaryDetail = () => {
                     name="paymentMethod"
                     value={formData.paymentMethod}
                     onChange={handleInputChange}
-                    disabled={!isEditing}
+                    disabled={disableInputs || !isEditing}
                     className="w-full px-3 py-2 bg-white border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {paymentMethods.map((method) => (
@@ -583,7 +648,7 @@ const SalaryDetail = () => {
                       name="bankDetails.bankName"
                       value={formData.bankDetails.bankName}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={disableInputs || !isEditing}
                       className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Enter bank name"
                     />
@@ -597,7 +662,7 @@ const SalaryDetail = () => {
                       name="bankDetails.branchName"
                       value={formData.bankDetails.branchName}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={disableInputs || !isEditing}
                       className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Enter branch name"
                     />
@@ -610,7 +675,7 @@ const SalaryDetail = () => {
                       name="bankDetails.accountType"
                       value={formData.bankDetails.accountType}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={disableInputs || !isEditing}
                       className="w-full px-3 py-2 bg-white border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <option value="Savings">Savings</option>
@@ -626,7 +691,7 @@ const SalaryDetail = () => {
                       name="bankDetails.accountNumber"
                       value={formData.bankDetails.accountNumber}
                       onChange={handleInputChange}
-                      disabled={!isEditing}
+                      disabled={disableInputs || !isEditing}
                       className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                       placeholder="Enter account number"
                     />

@@ -49,8 +49,6 @@ const EmpSalaryList = () => {
     }
   };
 
-  
-
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="container mx-auto bg-white rounded-xl shadow-lg p-8">
@@ -61,7 +59,7 @@ const EmpSalaryList = () => {
             Employee Directory
           </h1>
         </div>
-                  <div className="mb-2 relative">
+        <div className="mb-2 relative">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <svg
@@ -146,22 +144,28 @@ const EmpSalaryList = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{`${employee.firstName} ${employee.lastName}`}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {departments.find(d => d.id == employee.department || d.name === employee.department)?.name || ''}
+                            {departments.find(
+                              (d) =>
+                                d.id == employee.department ||
+                                d.name === employee.department
+                            )?.name || ""}
                           </td>
 
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center space-x-4">
                               {/* View Button */}
-                                                          <button
-                              type="button"
-                              onClick={() =>
-                                navigate(`/salarydetail`, { state: { employee } })
-                              }
-                              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
-                              title={`View Salary Details for ${employee.firstName} ${employee.lastName}`}
-                            >
-                              Salary Details
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(`/salarydetail`, {
+                                    state: { employee },
+                                  })
+                                }
+                                className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
+                                title={`View Salary Details for ${employee.firstName} ${employee.lastName}`}
+                              >
+                                Salary Details
+                              </button>
                             </div>
                           </td>
                         </tr>

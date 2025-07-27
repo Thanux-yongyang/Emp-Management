@@ -261,7 +261,7 @@ export const EmployeeForm = () => {
                     <option disabled>Loading...</option>
                   ) : (
                     departments.map((dept) => (
-                      <option key={dept.id} value={dept.name}>
+                      <option key={dept.id} value={dept.id}>
                         {dept.name}
                       </option>
                     ))

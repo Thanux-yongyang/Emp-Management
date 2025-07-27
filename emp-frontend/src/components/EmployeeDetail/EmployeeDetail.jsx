@@ -239,9 +239,9 @@ const EmployeeDetail = () => {
                 </select>
                 {deptError && <div className="text-red-500 text-sm mt-1">{deptError}</div>}
                 {/* Show department name when not editing */}
-                {!isEditing && deptName && (
+                {/* {!isEditing && deptName && (
                   <div className="text-sm text-gray-500 mt-1">Department: {deptName}</div>
-                )}
+                )} */}
               </div>
               
               
