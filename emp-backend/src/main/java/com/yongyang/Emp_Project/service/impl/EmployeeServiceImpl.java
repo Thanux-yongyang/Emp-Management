@@ -91,7 +91,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                     .orElse(List.of());
         } catch (NumberFormatException e) {
             // If it's not a number, search by name
-            List<Employee> matched = employeeRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(query, query);
+            List<Employee> matched = employeeRepository.findByFirstNameAndLastName(query, query);
             return matched.stream().map(EmployeeMapper::toDTO).collect(Collectors.toList());
 
         }
