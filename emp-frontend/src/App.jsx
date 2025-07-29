@@ -21,7 +21,8 @@ import { EmpSalaryProvider } from './context/EmpSalaryContext';
 import EmpClockInOut from './components/Attendance/EmpClockInOut';
 import {LoginManage} from './components/Attendance/AttendanceLoginManage';
 import { AttendanceLoginProvider } from './context/AttendanceLoginContext';
-import  SuccessfullLogin  from './components/Attendance/SuccessfullLogin';
+import  ClockInSuccess  from './components/Attendance/ClockInSuccess';
+import ClockOutSuccess from './components/Attendance/ClockOutSuccess';
 
 
 
@@ -36,8 +37,21 @@ function App() {
            
             <Routes>
               <Route path='/' element={<LoginForm/>}/>
-              <Route path= "/clockinout" element={<EmpClockInOut/>}/>
-             <Route path="/successfull-login" element={<SuccessfullLogin />} />
+              <Route path= "/clockinout" element={
+                <AttendanceLoginProvider>
+                  <EmpClockInOut />
+                </AttendanceLoginProvider>
+              }/>
+             <Route path="/clockinsuccess" element={
+              <AttendanceLoginProvider>
+                <ClockInSuccess />
+              </AttendanceLoginProvider>
+             } />
+             <Route path="/clockoutsuccess" element={
+              <AttendanceLoginProvider>
+                <ClockOutSuccess />
+              </AttendanceLoginProvider>
+             } />
               <Route element={<ProtectedLayout />}>
 
               <Route path="/home" element={<Home />} />

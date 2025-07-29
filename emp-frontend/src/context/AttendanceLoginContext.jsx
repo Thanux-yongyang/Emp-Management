@@ -30,24 +30,24 @@ export const AttendanceLoginProvider = ({ children }) => {
     }
   };
 
-  // Fetch attendance logins from backend
-  const fetchAttendanceLogins = async () => {
-    try {
-      setLoading(true); // Reset loading state
-      setError(null);   // Clear previous errors
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/attendance/create-logins`);
-      setAttendanceLogins(response.data);
-    } catch (error) {
-      handleError(error, "Failed to load attendance logins.");
-    } finally {
-      setLoading(false); // Reset loading state
-    }
-  };
+  // // Fetch attendance logins from backend
+  // const fetchAttendanceLogins = async () => {
+  //   try {
+  //     setLoading(true); // Reset loading state
+  //     setError(null);   // Clear previous errors
+  //     const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/attendance/login`);
+  //     setAttendanceLogins(response.data);
+  //   } catch (error) {
+  //     handleError(error, "Failed to load attendance logins.");
+  //   } finally {
+  //     setLoading(false); // Reset loading state
+  //   }
+  // };
 
   // Initial fetch
-  useEffect(() => {
-    fetchAttendanceLogins();
-  }, []);
+  // useEffect(() => {
+  //   fetchAttendanceLogins();
+  // }, []);
 
   // Add attendance login
   const addAttendanceLogin = async (newLogin) => {
@@ -83,7 +83,7 @@ export const AttendanceLoginProvider = ({ children }) => {
       error,
       addAttendanceLogin,
       updateAttendanceLogin,
-      fetchAttendanceLogins
+      // fetchAttendanceLogins
     }}>
       {children}
     </AttendanceLoginContext.Provider>

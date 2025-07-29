@@ -1,6 +1,6 @@
 import React from 'react';
 
-const SuccessfullLogin = () => {
+const ClockInSuccess = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
       <div className="text-center">
@@ -56,4 +56,4 @@ const SuccessfullLogin = () => {
   );
 };
 
-export default SuccessfullLogin;
+export default ClockInSuccess;

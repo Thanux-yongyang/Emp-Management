@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import {useNavigate} from 'react-router-dom';
+import { useAttendanceLoginContext } from '../../context/AttendanceLoginContext';
 
 const EmpClockInOut = () => {
   const [loginId, setLoginId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [status, setStatus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const {login} = useAttendanceLoginContext();
+  
+
 
   const handleClockIn = async () => {
     if (!loginId || !loginPassword) {
@@ -14,12 +20,14 @@ const EmpClockInOut = () => {
     }
     
     setIsLoading(true);
+    setStatus('') ;
     try {
-      // Simulating API call since axios isn't available
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      //call backedn via context
+      const data = await login(loginId, loginPassword);
+      
       setStatus(`✅ Clocked in at ${new Date().toLocaleTimeString()}`);
       setTimeout(()=>{
-        navigate('/Successfull-login');
+        navigate('/clockinsuccess'); // Navigate to success page after clocking in
       }, 500);
     } catch (err) {
       setStatus('❌ Clock in failed.');
@@ -39,13 +47,15 @@ const EmpClockInOut = () => {
       // Simulating API call since axios isn't available
       await new Promise(resolve => setTimeout(resolve, 1000));
       setStatus(`✅ Clocked out at ${new Date().toLocaleTimeString()}`);
+      setTimeout(()=>{
+        navigate('/clockoutsuccess'); // Navigate to success page after clocking out
+      }, 500);
     } catch (err) {
       setStatus('❌ Clock out failed.');
     } finally {
       setIsLoading(false);
     }
   };
-  const navigate = useNavigate();
 
   const handleForgotPassword = () => {
     setStatus('🔄 Password reset link sent to your email');
