@@ -14,18 +14,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
-@RequestMapping("/attendance")
 @CrossOrigin(origins = "*")
+@RequestMapping("/attendance")
+
 public class AttendanceLoginController {
     @Autowired
     private AttendanceLoginService attendanceLoginService;
 
 
 
-    @PostMapping("/login")
+    @PostMapping("/clockin")
    public AttendanceLoginResponseDto login(@RequestBody AttendanceLoginRequestDto attendanceLoginRequestDto) {
     return attendanceLoginService.login(attendanceLoginRequestDto.getUsername(),attendanceLoginRequestDto.getPassword());
    }
+
+   @PostMapping("/clockout")
+    public AttendanceLoginResponseDto clockOut(@RequestBody AttendanceLoginRequestDto attendanceLoginRequestDto) {
+        return attendanceLoginService.clockOut(attendanceLoginRequestDto.getUsername(), attendanceLoginRequestDto.getPassword());
+    }
    
     
 }

@@ -39,22 +39,22 @@ public class AttendanceDetail {
     @Column(name = "attend_date", nullable = false)
     private Date attendDate;
 
-    @Temporal(TemporalType.TIME)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "clockin_time" ,nullable = false)
     private Date clockIn;
 
-    @Temporal(TemporalType.TIME)
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "clockout_time" ,nullable = true)
     private Date clockOut;
 
     @Column(name = "total_time" ,nullable = false)
-    private long totalHour;
+    private Double totalHour;
 
     @Column(name = "break_time" ,nullable = false)
-    private long breakHour;
+    private Double breakHour;
 
     @Column(name = "over_time" ,nullable = false)
-    private long overTime;
+    private Double overTime;
     
 
     

@@ -15,8 +15,8 @@ public class AttendanceLoginResponseDto {
     private Date attendDate;
     private Date clockIn;
     private Date clockOut;
-    private long totalHour;
-    private long breakHour;
-    private long overTime;
+    private Double totalHour;
+    private Double breakHour;
+    private Double overTime;
     
 }
