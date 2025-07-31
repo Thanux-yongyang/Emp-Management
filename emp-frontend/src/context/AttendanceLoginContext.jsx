@@ -19,13 +19,25 @@ export const AttendanceLoginProvider = ({ children }) => {
   //attendance login context to manage attendance logins
   const login = async (username, password) => {
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/attendance/login`, {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/attendance/clockin`, {
         username,
         password,
       });
       return response.data; // Return the login data
     } catch (error) {
-      handleError(error, "Login failed. Please check your credentials.");
+      handleError(error, "Clock In failed. Please check your credentials.");
+      throw error; // Propagate the error
+    }
+  };
+  const clockOut = async (username, password) => {
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/attendance/clockout`, {
+        username,
+        password,
+      });
+      return response.data; // Return the login data
+    } catch (error) {
+      handleError(error, "Clock out failed. Please check your credentials.");
       throw error; // Propagate the error
     }
   };
@@ -79,6 +91,7 @@ export const AttendanceLoginProvider = ({ children }) => {
     <AttendanceLoginContext.Provider value={{
       attendanceLogins,
       login,
+      clockOut,
       loading,
       error,
       addAttendanceLogin,

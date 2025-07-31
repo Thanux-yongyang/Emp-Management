@@ -6,10 +6,14 @@ const EmpClockInOut = () => {
   const [loginId, setLoginId] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [status, setStatus] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isClockInLoading, setIsClockInLoading] = useState(false);
+  const [isClockOutLoading, setIsClockOutLoading] = useState(false);
   const navigate = useNavigate();
+  const isLoading = isClockInLoading || isClockOutLoading;
 
-  const {login} = useAttendanceLoginContext();
+
+  const {login,clockOut} = useAttendanceLoginContext();
+
   
 
 
@@ -19,7 +23,7 @@ const EmpClockInOut = () => {
       return;
     }
     
-    setIsLoading(true);
+    setIsClockInLoading(true);
     setStatus('') ;
     try {
       //call backedn via context
@@ -32,7 +36,7 @@ const EmpClockInOut = () => {
     } catch (err) {
       setStatus('❌ Clock in failed.');
     } finally {
-      setIsLoading(false);
+      setIsClockInLoading(false);
     }
   };
 
@@ -42,10 +46,10 @@ const EmpClockInOut = () => {
       return;
     }
     
-    setIsLoading(true);
+    setIsClockOutLoading(true);
     try {
       // Simulating API call since axios isn't available
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const data = await clockOut(loginId, loginPassword);
       setStatus(`✅ Clocked out at ${new Date().toLocaleTimeString()}`);
       setTimeout(()=>{
         navigate('/clockoutsuccess'); // Navigate to success page after clocking out
@@ -53,7 +57,7 @@ const EmpClockInOut = () => {
     } catch (err) {
       setStatus('❌ Clock out failed.');
     } finally {
-      setIsLoading(false);
+      setIsClockOutLoading(false);
     }
   };
 
