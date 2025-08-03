@@ -2,8 +2,11 @@ package com.yongyang.Emp_Project.service.impl;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +31,10 @@ import lombok.AllArgsConstructor;
 @Transactional
 @AllArgsConstructor
 public class AttendanceLoginServiceImpl implements AttendanceLoginService {
-
+    @Autowired
     private final AttendanceLoginRepository attendanceLoginRepository;
     private final PasswordEncoder passwordEncoder;
+    @Autowired
     private final EmployeeRepository employeeRepository;
     private final AttendanceDetailRepository attendanceDetailRepository;
     private final DepartmentRepository departmentRepository; 
@@ -42,16 +46,16 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
 
     @Override
     public AttendanceLoginResponseDto login(String loginName, String password) {
-        System.out.println("Test of Login");
+        // System.out.println("Test of Login");
 
         AttendanceLogin login = attendanceLoginRepository.findByLoginName(loginName)
             .filter(attendanceLogin -> passwordEncoder.matches(password, attendanceLogin.getPassword()))
             .orElseThrow(() -> new RuntimeException("Invalid loginName or password"));
 
-        Employee employee = employeeRepository.findById(login.getEmpId())
+        Employee employee = employeeRepository.findById(login.getEmployee().getId())
             .orElseThrow(() -> new RuntimeException("Employee Not Found"));
 
-        Department department = departmentRepository.findById(login.getDepartmentId())
+        Department department = departmentRepository.findById(login.getEmployee().getDepartment().getId())
             .orElseThrow(() -> new RuntimeException("Department Not Found"));
 
         // Get today's attendance record if exists
@@ -85,8 +89,15 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
         String hashedPassword = passwordEncoder.encode(attendanceLoginDto.getPassword());
         attendanceLoginDto.setPassword(hashedPassword);
         AttendanceLogin attendanceLogin = AttendanceLoginMapper.toAttendanceLoginEntity(attendanceLoginDto);
-        AttendanceLogin savedUser = attendanceLoginRepository.save(attendanceLogin);
-        return AttendanceLoginMapper.toAttendanceLoginDto(savedUser);
+    
+         // Fetch full employee from DB with department
+    Employee employee = employeeRepository.findById(attendanceLoginDto.getEmployeeId())
+    .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+attendanceLogin.setEmployee(employee);  // Set full employee entity
+
+AttendanceLogin savedUser = attendanceLoginRepository.save(attendanceLogin);
+return AttendanceLoginMapper.toAttendanceLoginDto(savedUser);
     }
 
     @Override
@@ -107,8 +118,8 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
         detail.setBreakHour(BREAK_HOUR); // Store break in hours
         detail.setOverTime(0.0);
 
-        System.out.println("Clock-in saved for employee: " + employee.getFirstName() + " " + employee.getLastName() + 
-                          " at " + now);
+        // System.out.println("Clock-in saved for employee: " + employee.getFirstName() + " " + employee.getLastName() + 
+        //                   " at " + now);
 
         return attendanceDetailRepository.save(detail);
     }
@@ -132,24 +143,24 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
         calculateWorkHours(detail);
 
         AttendanceDetail saved = attendanceDetailRepository.save(detail);
-        System.out.println("ClockOut saved with ID: " + saved.getId() + 
-                          ", Total Hours: " + saved.getTotalHour() + 
-                          ", Overtime: " + saved.getOverTime());
+        // System.out.println("ClockOut saved with ID: " + saved.getId() + 
+        //                   ", Total Hours: " + saved.getTotalHour() + 
+        //                   ", Overtime: " + saved.getOverTime());
         return saved;
     }
 
     @Override
     public AttendanceLoginResponseDto clockOut(String loginName, String password) {
-        System.out.println("Test of ClockOut");
+        // System.out.println("Test of ClockOut");
 
         AttendanceLogin login = attendanceLoginRepository.findByLoginName(loginName)
             .filter(attendanceLogin -> passwordEncoder.matches(password, attendanceLogin.getPassword()))
             .orElseThrow(() -> new RuntimeException("Invalid loginName or password"));
 
-        Employee employee = employeeRepository.findById(login.getEmpId())
+        Employee employee = employeeRepository.findById(login.getEmployee().getId())
             .orElseThrow(() -> new RuntimeException("Employee Not Found"));
 
-        Department department = departmentRepository.findById(login.getDepartmentId())
+        Department department = departmentRepository.findById(login.getEmployee().getDepartment().getId())
             .orElseThrow(() -> new RuntimeException("Department Not Found"));
 
         AttendanceDetail detail = saveClockOut(login, employee);
@@ -197,14 +208,14 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
         long clockInMillis = detail.getClockIn().getTime();
         long clockOutMillis = detail.getClockOut().getTime();
         
-        System.out.println("Clock-in: " + detail.getClockIn());
-        System.out.println("Clock-out: " + detail.getClockOut());
-        System.out.println("Time difference in millis: " + (clockOutMillis - clockInMillis));
+        // System.out.println("Clock-in: " + detail.getClockIn());
+        // System.out.println("Clock-out: " + detail.getClockOut());
+        // System.out.println("Time difference in millis: " + (clockOutMillis - clockInMillis));
 
         // Calculate total time worked in hours (including break)
         double totalWorkedHours = (double)(clockOutMillis - clockInMillis) / (1000.0 * 60.0 * 60.0);
         
-        System.out.println("Total worked hours (including break): " + totalWorkedHours);
+        // System.out.println("Total worked hours (including break): " + totalWorkedHours);
 
         // Get break time in hours (should be stored as hours in database)
         Double breakHours = detail.getBreakHour() != null ? detail.getBreakHour() : BREAK_HOUR;
@@ -212,8 +223,8 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
         // Calculate net working hours (excluding break)
         double netWorkingHours = totalWorkedHours - breakHours;
         
-        System.out.println("Break hours: " + breakHours);
-        System.out.println("Net working hours: " + netWorkingHours);
+        // System.out.println("Break hours: " + breakHours);
+        // System.out.println("Net working hours: " + netWorkingHours);
 
         // Calculate overtime
         double overtimeHours = 0.0;
@@ -228,7 +239,7 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
             }
         }
 
-        System.out.println("Calculated overtime hours: " + overtimeHours);
+        // System.out.println("Calculated overtime hours: " + overtimeHours);
 
         // Round to 2 decimal places for cleaner storage
         double roundedNetHours = Math.round(netWorkingHours * 100.0) / 100.0;
@@ -238,7 +249,26 @@ public class AttendanceLoginServiceImpl implements AttendanceLoginService {
         detail.setTotalHour(roundedNetHours);
         detail.setOverTime(roundedOvertimeHours);
         
-        System.out.println("Final total hours: " + roundedNetHours);
-        System.out.println("Final overtime hours: " + roundedOvertimeHours);
+        // System.out.println("Final total hours: " + roundedNetHours);
+        // System.out.println("Final overtime hours: " + roundedOvertimeHours);
     }
+
+    public List<AttendanceLoginResponseDto>getAllAttendance(){
+        List<AttendanceDetail> attendanceList = attendanceDetailRepository.findAll();
+
+        return attendanceList.stream().map(attendance -> {
+            AttendanceLoginResponseDto dto = new AttendanceLoginResponseDto();
+
+            dto.setEmployeename(attendance.getEmployee().getFirstName()+" "+attendance.getEmployee().getLastName());
+            dto.setDepartname(attendance.getEmployee().getDepartment().getDepartmentName());
+            dto.setAttendDate(attendance.getAttendDate());
+            dto.setClockIn(attendance.getClockIn());
+            dto.setClockOut(attendance.getClockOut());
+            dto.setTotalHour(attendance.getTotalHour());
+            dto.setBreakHour(attendance.getBreakHour());
+            dto.setOverTime(attendance.getOverTime());
+            return dto;
+        }).collect(Collectors.toList());
+    }     
+        
 }

@@ -19,12 +19,11 @@ public class AttendanceLogin {
     private String loginName;
     @Column(nullable = false)
     private String password;
-    @Column(nullable = false , unique = true)
-    private String email;
-    @Column(nullable = false)
-    private long departmentId;
-    @Column(nullable = false , unique = true)
-    private long empId;
+   
+  
+    @ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "emp_id", nullable = false)
+private Employee employee;
    
     
     

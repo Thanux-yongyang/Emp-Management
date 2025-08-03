@@ -1,5 +1,7 @@
 package com.yongyang.Emp_Project.service;
 
+import java.util.List;
+
 import com.yongyang.Emp_Project.dto.AttendanceLoginDto;
 import com.yongyang.Emp_Project.dto.AttendanceLoginResponseDto;
 import com.yongyang.Emp_Project.entity.AttendanceLogin;
@@ -12,4 +14,6 @@ public interface AttendanceLoginService {
     AttendanceLoginDto createUser(AttendanceLoginDto attendanceLoginDto); 
     AttendanceDetail saveClockIn(AttendanceLogin attendanceLogin , Employee employee);
     AttendanceDetail saveClockOut(AttendanceLogin attendanceLogin, Employee employee);
+    List<AttendanceLoginResponseDto> getAllAttendance();
+
 }

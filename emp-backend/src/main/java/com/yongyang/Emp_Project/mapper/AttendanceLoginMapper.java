@@ -3,6 +3,7 @@ package com.yongyang.Emp_Project.mapper;
 import com.yongyang.Emp_Project.dto.AttendanceLoginDto;
 
 import com.yongyang.Emp_Project.entity.AttendanceLogin;
+import com.yongyang.Emp_Project.entity.Employee;
 
 public class AttendanceLoginMapper {
     public static AttendanceLoginDto toAttendanceLoginDto(AttendanceLogin attendanceLogin){
@@ -10,20 +11,23 @@ public class AttendanceLoginMapper {
             attendanceLogin.getId(),
             attendanceLogin.getLoginName(),
             attendanceLogin.getPassword(),
-            attendanceLogin.getEmail(),
-            attendanceLogin.getDepartmentId(),
-            attendanceLogin.getEmpId() 
+            attendanceLogin.getEmployee().getEmail(),
+            attendanceLogin.getEmployee().getDepartment().getId(),
+            attendanceLogin.getEmployee().getId() 
         );
     }
-    public static AttendanceLogin toAttendanceLoginEntity(AttendanceLoginDto attendanceLoginDto){
-        return new AttendanceLogin(
-            attendanceLoginDto.getId(),
-            attendanceLoginDto.getUsername(),
-            attendanceLoginDto.getPassword(),
-            attendanceLoginDto.getEmail(),
-            attendanceLoginDto.getDepartment(),
-            attendanceLoginDto.getEmployeeId()
-        );
+    public static AttendanceLogin toAttendanceLoginEntity(AttendanceLoginDto dto) {
+        AttendanceLogin login = new AttendanceLogin();
+        login.setId(dto.getId());
+        login.setLoginName(dto.getUsername());
+        login.setPassword(dto.getPassword());
+
+        // Create minimal Employee object with only ID
+        Employee emp = new Employee();
+        emp.setId(dto.getEmployeeId());
+
+        login.setEmployee(emp);
+
+        return login;
     }
-    
 }
