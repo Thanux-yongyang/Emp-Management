@@ -1,6 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect,useContext } from 'react';
 
+
 import axios from 'axios'; 
 
 const AttendanceLoginContext = createContext();
@@ -42,19 +43,19 @@ export const AttendanceLoginProvider = ({ children }) => {
     }
   };
 
-  // // Fetch attendance logins from backend
-  // const fetchAttendanceLogins = async () => {
-  //   try {
-  //     setLoading(true); // Reset loading state
-  //     setError(null);   // Clear previous errors
-  //     const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/attendance/login`);
-  //     setAttendanceLogins(response.data);
-  //   } catch (error) {
-  //     handleError(error, "Failed to load attendance logins.");
-  //   } finally {
-  //     setLoading(false); // Reset loading state
-  //   }
-  // };
+  /// Fetch all attendance records for all employees
+const fetchAllAttendance = async () => {
+  try {
+    setLoading(true);
+    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/attendance/getall`);
+    return response.data; // List of AttendanceLoginResponseDto
+  } catch (error) {
+    handleError(error, "Failed to fetch attendance data.");
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Initial fetch
   // useEffect(() => {
@@ -96,7 +97,7 @@ export const AttendanceLoginProvider = ({ children }) => {
       error,
       addAttendanceLogin,
       updateAttendanceLogin,
-      // fetchAttendanceLogins
+      fetchAllAttendance
     }}>
       {children}
     </AttendanceLoginContext.Provider>

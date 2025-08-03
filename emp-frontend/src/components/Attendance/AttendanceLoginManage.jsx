@@ -64,8 +64,6 @@ setForm((prev) => ({
     const userData = {
       username: form.username,
       password: form.password,
-      email: form.email,
-      department: form.department,
       employeeId: form.employeeId,
     };
 
@@ -73,7 +71,8 @@ setForm((prev) => ({
 
     if (response) {
       alert("User successfully created!");
-      navigate("/home"); // or wherever you want to redirect
+      handleClear();
+      navigate("/attendance/create-logins"); // or wherever you want to redirect
     }
   };
 

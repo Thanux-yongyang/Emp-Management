@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useAttendanceLoginContext } from '../../context/AttendanceLoginContext';
 import {
   Calendar,
   Clock,
   Users,
-  Filter,
   Search,
-  Plus,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -16,85 +15,73 @@ import { useNavigate } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 
 const Attendance = () => {
+  const { fetchAllAttendance } = useAttendanceLoginContext();
   const navigate = useNavigate();
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterDepartment, setFilterDepartment] = useState("all");
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
 
-  // Mock data for demonstration
-  const mockAttendanceData = [
-    {
-      id: 1,
-      employeeId: "EMP001",
-      employeeName: "John Doe",
-      department: "Engineering",
-      date: "2024-01-15",
-      checkIn: "09:00 AM",
-      checkOut: "05:30 PM",
-      status: "present",
-      totalHours: 8.5,
-      overtime: 0.5,
-    },
-    {
-      id: 2,
-      employeeId: "EMP002",
-      employeeName: "Jane Smith",
-      department: "Marketing",
-      date: "2024-01-15",
-      checkIn: "08:45 AM",
-      checkOut: "06:00 PM",
-      status: "present",
-      totalHours: 9.25,
-      overtime: 1.25,
-    },
-    {
-      id: 3,
-      employeeId: "EMP003",
-      employeeName: "Mike Johnson",
-      department: "Sales",
-      date: "2024-01-15",
-      checkIn: "09:30 AM",
-      checkOut: null,
-      status: "late",
-      totalHours: 0,
-      overtime: 0,
-    },
-    {
-      id: 4,
-      employeeId: "EMP004",
-      employeeName: "Sarah Wilson",
-      department: "HR",
-      date: "2024-01-15",
-      checkIn: null,
-      checkOut: null,
-      status: "absent",
-      totalHours: 0,
-      overtime: 0,
-    },
-  ];
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all"); // You can remove if no status field available
+  const [filterDepartment, setFilterDepartment] = useState("all");
+  const [selectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [showQR, setShowQR] = useState(false);
+  const qrRef = useRef();
+  const qrValue = "http://192.168.43.57:5173/clockinout";
 
   useEffect(() => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setAttendanceData(mockAttendanceData);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const allData = await fetchAllAttendance();
 
-  // Extract unique departments
+        const today = new Date().toISOString().split("T")[0];
+
+        // Filter records whose attendDate matches today
+        const filtered = allData.filter(record => {
+          const recordDateStr = record.attendDate ? new Date(record.attendDate).toISOString().split("T")[0] : null;
+          return recordDateStr === today;
+        });
+
+        setAttendanceData(filtered);
+      } catch (error) {
+        console.error("Failed to fetch attendance data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [fetchAllAttendance]);
+
+  // Extract unique departments from `departname` field
   const departments = [
     "all",
     ...Array.from(
-      new Set(attendanceData.map((r) => r.department).filter(Boolean))
+      new Set(attendanceData.map(r => r.departname).filter(Boolean))
     ),
   ];
+const getStatusFromRecord = (record) => {
+  if (!record.clockIn) return "absent"; // No clock-in means absent
 
+  const clockInTime = new Date(record.clockIn);
+
+  // Define late threshold, e.g., 9:00 AM
+  const lateThreshold = new Date(clockInTime);
+  lateThreshold.setHours(9, 0, 0, 0); // 9:00:00.000 AM
+
+  if (clockInTime > lateThreshold) return "late";
+
+  return "present";
+};
+
+const enhancedAttendanceData = useMemo(() => {
+    return attendanceData.map(record => ({
+      ...record,
+      status: getStatusFromRecord(record),
+    }));
+  }, [attendanceData]);
+
+  // You don't have status field? So either remove these or handle safely
   const getStatusIcon = (status) => {
     switch (status) {
       case "present":
@@ -122,53 +109,59 @@ const Attendance = () => {
     }
   };
 
-  //Generate QR Code
-  const [showQR, setShowQR] = useState(false);
-  const qrRef = useRef();
-  const qrValue = "http://192.168.43.57:5173/clockinout"; // Replace with your actual URL
+  // Filter attendance data based on search, department, and status (if available)
+  const filteredData = useMemo(() => {
+    return enhancedAttendanceData.filter((record) => {
+      const matchesSearch = record.employeename.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === "all" || record.status === filterStatus;
+      const matchesDepartment = filterDepartment === "all" || record.departname === filterDepartment;
+      return matchesSearch && matchesStatus && matchesDepartment;
+    });
+  }, [enhancedAttendanceData, searchTerm, filterStatus, filterDepartment]);
+
+
+  // Stats based on status if you have it; otherwise fallback to zeros or remove
+  const stats = useMemo(() => {
+    return {
+      total: enhancedAttendanceData.length,
+      present: enhancedAttendanceData.filter(r => r.status === "present").length,
+      absent: enhancedAttendanceData.filter(r => r.status === "absent").length,
+      late: enhancedAttendanceData.filter(r => r.status === "late").length,
+    };
+  }, [enhancedAttendanceData]);
+  // Format date/time helper
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString();
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "-";
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleDoubleClick = (record) => {
+    navigate(`/attendance/detail/${record.id}`, { state: { employee: record } });
+  };
+
   const handlePrint = () => {
     if (!qrRef.current) return;
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`
-    <html>
-      <head><title>Print QR Code</title></head>
-      <body style="text-align:center; margin-top:50px;">
-        <h2>QR Code</h2>
-        ${qrRef.current.innerHTML}
-      </body>
-    </html>
-  `);
+      <html>
+        <head><title>Print QR Code</title></head>
+        <body style="text-align:center; margin-top:50px;">
+          <h2>QR Code</h2>
+          ${qrRef.current.innerHTML}
+        </body>
+      </html>
+    `);
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
     printWindow.close();
-  };
-
-  const filteredData = attendanceData.filter((record) => {
-    const matchesSearch =
-      record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || record.status === filterStatus;
-    const matchesDepartment =
-      filterDepartment === "all" || record.department === filterDepartment;
-    return matchesSearch && matchesStatus && matchesDepartment;
-  });
-
-  const stats = {
-    total: attendanceData.length,
-    present: attendanceData.filter((r) => r.status === "present").length,
-    absent: attendanceData.filter((r) => r.status === "absent").length,
-    late: attendanceData.filter((r) => r.status === "late").length,
-  };
-
-  // Handle double click to navigate to attendance detail
-  const handleDoubleClick = (record) => {
-    navigate(`/attendance/detail/${record.id}`, {
-      state: {
-        employee: record,
-      },
-    });
   };
 
   return (
@@ -196,47 +189,46 @@ const Attendance = () => {
               })}
             </span>
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             {/* QR Code Popup */}
-      {showQR && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-800">Attendance QR Code</h3>
-              <button 
-                onClick={() => setShowQR(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="flex flex-col items-center">
-              <div ref={qrRef} className="mb-4 p-4 bg-white rounded-lg">
-                <QRCodeCanvas value={qrValue} size={256} />
+            {showQR && (
+              <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">Attendance QR Code</h3>
+                    <button
+                      onClick={() => setShowQR(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div ref={qrRef} className="mb-4 p-4 bg-white rounded-lg">
+                      <QRCodeCanvas value={qrValue} size={256} />
+                    </div>
+                    <p className="text-gray-600 mb-4 text-center">
+                      Scan this QR code to check-in for today's attendance
+                    </p>
+                    <button
+                      onClick={handlePrint}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    >
+                      <Printer className="h-4 w-4" /> Print QR Code
+                    </button>
+                  </div>
+                </div>
               </div>
-              <p className="text-gray-600 mb-4 text-center">
-                Scan this QR code to check-in for today's attendance
-              </p>
-              <button
-                onClick={handlePrint}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-              >
-                <Printer className="h-4 w-4" /> Print QR Code
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            )}
 
-            {/* Button to show QR Code */}
-       
-              <button
-                onClick={() => setShowQR(true)}
-                className="px-2 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              >
-                Generate QR
-              </button>
-        
+            {/* Buttons */}
+            <button
+              onClick={() => setShowQR(true)}
+              className="px-2 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+              Generate QR
+            </button>
 
             <button
               type="button"
@@ -253,26 +245,19 @@ const Attendance = () => {
           <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">
-                  Total Employees
-                </p>
-                <p className="text-2xl font-bold text-blue-900">
-                  {stats.total}
-                </p>
+                <p className="text-sm font-medium text-blue-600">Total Employees</p>
+                <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
             </div>
           </div>
 
+          {/* Show stats only if you have status field */}
           <div className="bg-green-50 p-6 rounded-lg border border-green-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600">
-                  Total Present
-                </p>
-                <p className="text-2xl font-bold text-green-900">
-                  {stats.present}
-                </p>
+                <p className="text-sm font-medium text-green-600">Total Present</p>
+                <p className="text-2xl font-bold text-green-900">{stats.present}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
@@ -282,9 +267,7 @@ const Attendance = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-red-600">Total Absent</p>
-                <p className="text-2xl font-bold text-red-900">
-                  {stats.absent}
-                </p>
+                <p className="text-2xl font-bold text-red-900">{stats.absent}</p>
               </div>
               <XCircle className="h-8 w-8 text-red-600" />
             </div>
@@ -293,12 +276,8 @@ const Attendance = () => {
           <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-yellow-600">
-                  Total Late
-                </p>
-                <p className="text-2xl font-bold text-yellow-900">
-                  {stats.late}
-                </p>
+                <p className="text-sm font-medium text-yellow-600">Total Late</p>
+                <p className="text-2xl font-bold text-yellow-900">{stats.late}</p>
               </div>
               <AlertCircle className="h-8 w-8 text-yellow-600" />
             </div>
@@ -307,21 +286,21 @@ const Attendance = () => {
 
         {/* Controls */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by employee name or ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by employee name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
+
           <div>
             <h1 className="pt-1">Filter By</h1>
           </div>
+
           <div className="flex gap-4">
             {/* Department Filter */}
             <select
@@ -329,13 +308,14 @@ const Attendance = () => {
               onChange={(e) => setFilterDepartment(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              {departments.map((dep) => (
+              {departments.map(dep => (
                 <option key={dep} value={dep}>
                   {dep === "all" ? "All Departments" : dep}
                 </option>
               ))}
             </select>
-            {/* Status Filter */}
+
+            {/* Status Filter - keep or remove based on your data */}
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -353,9 +333,7 @@ const Attendance = () => {
         {loading ? (
           <div className="text-center py-10">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-lg text-gray-600 mt-4">
-              Loading attendance data...
-            </p>
+            <p className="text-lg text-gray-600 mt-4">Loading attendance data...</p>
           </div>
         ) : (
           <div className="overflow-x-auto shadow-md rounded-lg">
@@ -383,6 +361,7 @@ const Attendance = () => {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                     Overtime
                   </th>
+                  {/* Remove status column header if no status */}
                   <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                     Status
                   </th>
@@ -390,64 +369,59 @@ const Attendance = () => {
               </thead>
 
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredData.map((record) => (
-                  <tr
-                    key={record.id}
-                    className="hover:bg-gray-50 transition duration-150 ease-in-out cursor-pointer"
-                    onDoubleClick={() => handleDoubleClick(record)}
-                    title="Double-click to view detailed attendance"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {record.employeeName}
+                {filteredData.length > 0 ? (
+                  filteredData.map(record => (
+                    <tr
+                      key={record.id || record.attendanceId} // fallback id
+                      className="hover:bg-gray-50 transition duration-150 ease-in-out cursor-pointer"
+                      onDoubleClick={() => handleDoubleClick(record)}
+                      title="Double-click to view detailed attendance"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{record.employeename}</div>
+                          {/* Remove employeeId if not available */}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {record.employeeId}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{record.departname}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {formatDate(record.attendDate)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {formatTime(record.clockIn)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {formatTime(record.clockOut)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {record.totalHour > 0 ? `${record.totalHour}h` : "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {record.overTime > 0 ? `${record.overTime}h` : "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {/* If no status, you may want to show something else */}
+                          {getStatusIcon(record.status)}
+                          <span className={getStatusBadge(record.status)}>
+                            {record.status ? record.status.charAt(0).toUpperCase() + record.status.slice(1) : "-"}
+                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.department}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.date}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.checkIn || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.checkOut || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.totalHours > 0 ? `${record.totalHours}h` : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {record.overtime > 0 ? `${record.overtime}h` : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(record.status)}
-                        <span className={getStatusBadge(record.status)}>
-                          {record.status.charAt(0).toUpperCase() +
-                            record.status.slice(1)}
-                        </span>
-                      </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="text-center py-10 text-gray-500">
+                      <Clock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                      No attendance records found
+                      <br />
+                      Try adjusting your search or filter criteria
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
-
-            {filteredData.length === 0 && (
-              <div className="text-center py-10 text-gray-500">
-                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p className="text-lg">No attendance records found</p>
-                <p className="text-sm">
-                  Try adjusting your search or filter criteria
-                </p>
-              </div>
-            )}
           </div>
         )}
       </div>
