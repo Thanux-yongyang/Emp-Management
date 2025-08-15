@@ -1,7 +1,6 @@
 package com.yongyang.Emp_Project.service.impl;
 
 import com.yongyang.Emp_Project.dto.EmployeeDto;
-import com.yongyang.Emp_Project.entity.Employee;
 import com.yongyang.Emp_Project.mapper.EmployeeMapper;
 import com.yongyang.Emp_Project.repository.EmployeeRepository;
 import com.yongyang.Emp_Project.service.EmployeeService;
@@ -11,7 +10,9 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import com.yongyang.Emp_Project.entity.Department;
+
+import com.yongyang.Emp_Project.entity.Department.Department;
+import com.yongyang.Emp_Project.entity.Employee.Employee;
 
 @Service
 @AllArgsConstructor

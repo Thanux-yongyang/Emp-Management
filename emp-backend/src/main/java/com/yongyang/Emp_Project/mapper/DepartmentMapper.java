@@ -1,7 +1,7 @@
 package com.yongyang.Emp_Project.mapper;
 
 import com.yongyang.Emp_Project.dto.DepartmentDto;
-import com.yongyang.Emp_Project.entity.Department;
+import com.yongyang.Emp_Project.entity.Department.Department;
 
 public class DepartmentMapper {
     public static DepartmentDto toDto(Department department) {

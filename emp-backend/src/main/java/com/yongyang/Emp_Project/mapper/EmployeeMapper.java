@@ -1,8 +1,8 @@
 package com.yongyang.Emp_Project.mapper;
 
 import com.yongyang.Emp_Project.dto.EmployeeDto;
-import com.yongyang.Emp_Project.entity.Employee;
-import com.yongyang.Emp_Project.entity.Department;
+import com.yongyang.Emp_Project.entity.Department.Department;
+import com.yongyang.Emp_Project.entity.Employee.Employee;
 
 public class EmployeeMapper {
     public static EmployeeDto toDTO(Employee employee){

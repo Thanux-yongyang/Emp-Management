@@ -2,7 +2,7 @@ package com.yongyang.Emp_Project.controller;
 
 
 import com.yongyang.Emp_Project.dto.LoginRequestDto;
-import com.yongyang.Emp_Project.entity.User;
+import com.yongyang.Emp_Project.entity.EmpUser.User;
 import com.yongyang.Emp_Project.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

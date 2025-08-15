@@ -1,7 +1,7 @@
 package com.yongyang.Emp_Project.mapper;
 
 import com.yongyang.Emp_Project.dto.UserDto;
-import com.yongyang.Emp_Project.entity.User;
+import com.yongyang.Emp_Project.entity.EmpUser.User;
 
 public class UserMapper {
     public static UserDto toUserDTO(User user){

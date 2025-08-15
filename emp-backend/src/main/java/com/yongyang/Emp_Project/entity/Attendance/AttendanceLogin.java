@@ -1,4 +1,6 @@
-package com.yongyang.Emp_Project.entity;
+package com.yongyang.Emp_Project.entity.Attendance;
+
+import com.yongyang.Emp_Project.entity.Employee.Employee;
 
 import jakarta.persistence.*;
 import lombok.*;

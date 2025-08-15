@@ -1,7 +1,8 @@
 package com.yongyang.Emp_Project.repository;
 
-import com.yongyang.Emp_Project.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.yongyang.Emp_Project.entity.EmpUser.User;
 
 import java.util.Optional;
 

@@ -1,22 +1,27 @@
 package com.yongyang.Emp_Project.dto;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class AttendanceDetailDto {
 
-    private long id;
-    private Date attendDate;
-    private Date clockIn;
-    private Date clockOut;
+    private Long id;
+    private LocalDate attendDate;
+    private LocalDateTime clockIn;
+    private LocalDateTime clockOut;
     private Double totalHour;
     private Double breakHour;
     private Double overTime;
-    
-    
+    private boolean isPaidLeave;
+
+
 }

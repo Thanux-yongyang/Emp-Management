@@ -1,8 +1,8 @@
 package com.yongyang.Emp_Project.mapper;
 
 import com.yongyang.Emp_Project.dto.AttendanceDetailDto;
-import com.yongyang.Emp_Project.entity.Employee;
-import com.yongyang.Emp_Project.entity.AttendanceDetail.AttendanceDetail;
+import com.yongyang.Emp_Project.entity.Attendance.AttendanceDetail;
+import com.yongyang.Emp_Project.entity.Employee.Employee;
 
 
 
@@ -15,7 +15,9 @@ public class AttendanceDetailMapper {
             attendanceDetail.getClockOut(),
             attendanceDetail.getTotalHour(),
             attendanceDetail.getBreakHour(),
-            attendanceDetail.getOverTime()
+            attendanceDetail.getOverTime(),
+            attendanceDetail.isPaidLeave()
+            
 
         );
     }
@@ -28,7 +30,8 @@ public class AttendanceDetailMapper {
             attendanceDetailDto.getClockOut(),
             attendanceDetailDto.getTotalHour(),
             attendanceDetailDto.getBreakHour(),
-            attendanceDetailDto.getOverTime()
+            attendanceDetailDto.getOverTime(),
+            attendanceDetailDto.isPaidLeave()
         );
     }
     

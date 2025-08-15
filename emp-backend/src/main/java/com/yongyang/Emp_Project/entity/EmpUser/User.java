@@ -1,4 +1,4 @@
-package com.yongyang.Emp_Project.entity;
+package com.yongyang.Emp_Project.entity.EmpUser;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

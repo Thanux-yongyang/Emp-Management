@@ -1,8 +1,8 @@
 package com.yongyang.Emp_Project.mapper;
 
 import com.yongyang.Emp_Project.dto.EmpSalaryDto;
-import com.yongyang.Emp_Project.entity.EmpSalary;
-import com.yongyang.Emp_Project.entity.Employee;
+import com.yongyang.Emp_Project.entity.Employee.Employee;
+import com.yongyang.Emp_Project.entity.Salary.EmpSalary;
 
 public class EmpSalaryMapper {
     public static EmpSalaryDto toDto(EmpSalary empSalary) {

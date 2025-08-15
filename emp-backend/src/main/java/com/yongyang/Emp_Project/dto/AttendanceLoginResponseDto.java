@@ -1,6 +1,8 @@
 package com.yongyang.Emp_Project.dto;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 
 import lombok.*;
 
@@ -12,11 +14,12 @@ public class AttendanceLoginResponseDto {
     private String username;
     private String employeename;
     private String departname;
-    private Date attendDate;
-    private Date clockIn;
-    private Date clockOut;
+    private LocalDate attendDate;
+    private LocalDateTime clockIn;
+    private LocalDateTime clockOut;
     private Double totalHour;
     private Double breakHour;
     private Double overTime;
+    private boolean paidLeave;
     
 }

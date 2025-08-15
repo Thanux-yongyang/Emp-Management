@@ -1,8 +1,8 @@
 package com.yongyang.Emp_Project.service.impl;
 
 import com.yongyang.Emp_Project.dto.EmpSalaryDto;
-import com.yongyang.Emp_Project.entity.EmpSalary;
-import com.yongyang.Emp_Project.entity.Employee;
+import com.yongyang.Emp_Project.entity.Employee.Employee;
+import com.yongyang.Emp_Project.entity.Salary.EmpSalary;
 import com.yongyang.Emp_Project.mapper.EmpSalaryMapper;
 import com.yongyang.Emp_Project.repository.EmpSalaryRepository;
 import com.yongyang.Emp_Project.repository.EmployeeRepository;

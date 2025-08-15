@@ -1,7 +1,7 @@
 package com.yongyang.Emp_Project.service.impl;
 
 import com.yongyang.Emp_Project.dto.DepartmentDto;
-import com.yongyang.Emp_Project.entity.Department;
+import com.yongyang.Emp_Project.entity.Department.Department;
 import com.yongyang.Emp_Project.mapper.DepartmentMapper;
 import com.yongyang.Emp_Project.repository.DepartmentRepository;
 import com.yongyang.Emp_Project.service.DepartmentService;

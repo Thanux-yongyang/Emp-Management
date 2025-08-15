@@ -1,9 +1,11 @@
-package com.yongyang.Emp_Project.entity;
+package com.yongyang.Emp_Project.entity.Salary;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.Date;
+
+import com.yongyang.Emp_Project.entity.Employee.Employee;
 
 @Getter
 @Setter

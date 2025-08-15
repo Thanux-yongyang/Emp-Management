@@ -1,7 +1,7 @@
 package com.yongyang.Emp_Project.service.impl;
 
 import com.yongyang.Emp_Project.dto.UserDto;
-import com.yongyang.Emp_Project.entity.User;
+import com.yongyang.Emp_Project.entity.EmpUser.User;
 import com.yongyang.Emp_Project.mapper.UserMapper;
 import com.yongyang.Emp_Project.repository.UserRepository;
 import com.yongyang.Emp_Project.service.UserService;

@@ -1,9 +1,8 @@
 package com.yongyang.Emp_Project.mapper;
 
 import com.yongyang.Emp_Project.dto.AttendanceLoginDto;
-
-import com.yongyang.Emp_Project.entity.AttendanceLogin;
-import com.yongyang.Emp_Project.entity.Employee;
+import com.yongyang.Emp_Project.entity.Attendance.AttendanceLogin;
+import com.yongyang.Emp_Project.entity.Employee.Employee;
 
 public class AttendanceLoginMapper {
     public static AttendanceLoginDto toAttendanceLoginDto(AttendanceLogin attendanceLogin){

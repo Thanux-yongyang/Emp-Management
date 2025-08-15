@@ -22,6 +22,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/departments/**").permitAll()
                         .requestMatchers("/api/empsalaries/**").permitAll()
                         .requestMatchers("attendance/**").permitAll()
+                        .requestMatchers("/api/paid-leave/**").permitAll()
+                        .requestMatchers("/paid-leave/**").permitAll()
                         .anyRequest().authenticated()                   // all other routes require login
                 );
         return http.build();
