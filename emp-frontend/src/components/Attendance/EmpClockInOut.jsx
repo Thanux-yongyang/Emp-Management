@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {useNavigate} from 'react-router-dom';
-import { useAttendanceLoginContext } from '../../context/AttendanceLoginContext';
+import { useAttendanceLoginContext } from '../../context/AttendanceContext';
 
 const EmpClockInOut = () => {
   const [loginId, setLoginId] = useState('');

@@ -174,27 +174,7 @@ const Reports = () => {
             </ResponsiveContainer>
           </ChartSection>
 
-          {/* Gender Distribution */}
-          <ChartSection title="Gender Distribution">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={genderChartData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {genderChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </ChartSection>
+         
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -380,12 +360,13 @@ const Reports = () => {
         </Section>
 
         {/* Export Options */}
-        <div className="flex gap-4 justify-end mt-8">
-          <ExportButton label="Export Employee List" color="blue" />
-          <ExportButton label="Export Salary Report" color="green" />
-          <ExportButton label="Export Department Summary" color="purple" />
-          <ExportButton label="Export Charts" color="orange" />
-        </div>
+        <div className="flex flex-wrap gap-4 justify-end mt-8">
+  <ExportButton label="Export Employee List" color="blue" />
+  <ExportButton label="Export Salary Report" color="emerald" />
+  <ExportButton label="Export Department Summary" color="rose" />
+  <ExportButton label="Export Charts" color="amber" />
+</div>
+
       </div>
     </div>
   );
@@ -421,10 +402,26 @@ const TableCell = ({ children }) => (
   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{children}</td>
 );
 
-const ExportButton = ({ label, color }) => (
-  <button className={`px-6 py-2 bg-${color}-600 text-white rounded-lg hover:bg-${color}-700 font-semibold shadow transition-colors`}>
-    {label} (Excel)
-  </button>
-);
+const colorClasses = {
+  blue: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
+  emerald: "bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500",
+  rose: "bg-rose-600 hover:bg-rose-700 focus:ring-rose-500",
+  amber: "bg-amber-500 hover:bg-amber-600 focus:ring-amber-400",
+  // fallback
+  default: "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500",
+};
+
+const ExportButton = ({ label, color = "default" }) => {
+  const classes = colorClasses[color] || colorClasses.default;
+  return (
+    <button
+      type="button"
+      className={`px-6 py-2 rounded-lg font-semibold text-white shadow-md transition duration-300 ease-in-out
+        focus:outline-none focus:ring-4 ${classes} transform hover:-translate-y-0.5 active:translate-y-0`}
+    >
+      {label}
+    </button>
+  );
+};
 
 export default Reports;

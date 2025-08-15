@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect ,} from "react";
 import { useNavigate } from "react-router-dom";
 import { useEmployees } from "../../context/EmployeeContext"; 
 
-import { useAttendanceLoginContext } from "../../context/AttendanceLoginContext";
+import { useAttendanceLoginContext } from "../../context/AttendanceContext";
 import { useDepartments } from "../../context/DepartmentContext";
 import * as wanakana from 'wanakana';
 

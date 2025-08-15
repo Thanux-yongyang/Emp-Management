@@ -57,6 +57,8 @@ const SalaryDetail = () => {
   const [newMonthError, setNewMonthError] = useState("");
   const [disableInputs, setDisableInputs] = useState(false);
 
+  
+
   // Helper: Get all existing months (YYYY-MM) from salaryHistory
   const existingMonths = salaryHistory.map(
     record => record.effectiveDate && record.effectiveDate.slice(0, 7)

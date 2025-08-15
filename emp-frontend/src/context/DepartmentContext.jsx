@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Set axios baseURL from VITE_BACKEND_URL
 axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
-console.log('Backend URL:', import.meta.env.VITE_BACKEND_URL);
+// console.log('Backend URL:', import.meta.env.VITE_BACKEND_URL);
 
 const DepartmentContext = createContext();
 

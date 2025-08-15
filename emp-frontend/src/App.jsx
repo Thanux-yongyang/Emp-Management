@@ -20,9 +20,11 @@ import {DepartmentProvider} from './context/DepartmentContext';
 import { EmpSalaryProvider } from './context/EmpSalaryContext';
 import EmpClockInOut from './components/Attendance/EmpClockInOut';
 import {LoginManage} from './components/Attendance/AttendanceLoginManage';
-import { AttendanceLoginProvider } from './context/AttendanceLoginContext';
+import { AttendanceLoginProvider } from './context/AttendanceContext';
 import  ClockInSuccess  from './components/Attendance/ClockInSuccess';
 import ClockOutSuccess from './components/Attendance/ClockOutSuccess';
+import LeaveManagement from './components/LeaveManagement/LeaveManagement.jsx'
+import { LeaveProvider } from './context/LeaveContext.jsx';
 
 
 
@@ -69,13 +71,25 @@ function App() {
                 } />
               <Route path="/departments" element={<Departments />} />
               <Route path="/salarydetail" element={<SalaryDetail />} />
-              <Route path="/attendance/detail/:id" element={<AttendanceDetail />} />
+              <Route path="/attendance/detail/:id" element={
+                <AttendanceLoginProvider>
+                  <LeaveProvider>
+                  <AttendanceDetail />
+                  </LeaveProvider>
+                 </AttendanceLoginProvider>
+                } />
               
               <Route path="/attendance/create-logins" element={
                  <AttendanceLoginProvider>
                   <LoginManage/>
                  </AttendanceLoginProvider>
                 }/>
+                <Route path="/leave-management" element={
+                  <LeaveProvider>
+                  <LeaveManagement />
+                  </LeaveProvider>
+                  
+                  } />
              
               </Route>
             </Routes>
