@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useDepartments } from '../../context/DepartmentContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Departments = () => {
   const {
@@ -10,6 +11,9 @@ const Departments = () => {
     updateDepartment,
     deleteDepartment,
   } = useDepartments();
+
+  const {user} = useAuth();
+  const role = user?.role || 'general'; // Default to 'user' if role is undefined
 
   const [newDept, setNewDept] = useState('');
   const [editId, setEditId] = useState(null);
@@ -138,6 +142,7 @@ const Departments = () => {
                         <button
                           onClick={() => handleSave(dept.id)}
                           className="px-3 py-1 rounded w-16 bg-green-600 text-white hover:bg-green-700"
+                          disabled = {role !== 'admin'}
                           style={{ minWidth: 64 }}
                         >
                           Save
@@ -146,6 +151,7 @@ const Departments = () => {
                         <button
                           onClick={handleCancel}
                           className="px-3 py-1 rounded w-16 bg-gray-400 text-white hover:bg-gray-500"
+                          disabled = {role !== 'admin'}
                           style={{ minWidth: 64 }}
                         >
                           Cancel
@@ -156,16 +162,18 @@ const Departments = () => {
                         {/* Edit Button */}
                         <button
                           onClick={() => handleEdit(dept.id, dept.name)}
-                          className="px-3 py-1 rounded w-16 bg-yellow-500 text-white hover:bg-yellow-600"
+                          className={`px-3 py-1 rounded w-16 text-white ${role === 'admin' ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400 cursor-not-allowed'}`}
                           style={{ minWidth: 64 }}
+                          disabled = {role !== 'admin'}
                         >
                           Edit
                         </button>
                         {/* Delete Button */}
                         <button
                           onClick={() => handleDelete(dept.id)}
-                          className="px-3 py-1 rounded w-16 bg-red-600 text-white hover:bg-red-700"
+                          className={`px-3 py-1 rounded w-16 text-white ${role === 'admin' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'}`}
                           style={{ minWidth: 64 }}
+                          disabled = {role !== 'admin'}
                         >
                           Delete
                         </button>

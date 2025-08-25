@@ -25,6 +25,7 @@ import  ClockInSuccess  from './components/Attendance/ClockInSuccess';
 import ClockOutSuccess from './components/Attendance/ClockOutSuccess';
 import LeaveManagement from './components/LeaveManagement/LeaveManagement.jsx'
 import { LeaveProvider } from './context/LeaveContext.jsx';
+import { SalaryDataProvider } from './context/SalaryDataContext.jsx';
 
 
 
@@ -70,7 +71,14 @@ function App() {
                  </AttendanceLoginProvider>
                 } />
               <Route path="/departments" element={<Departments />} />
-              <Route path="/salarydetail" element={<SalaryDetail />} />
+              <Route path="/salarydetail" element={
+                <AttendanceLoginProvider>
+                  <SalaryDataProvider>
+                    <SalaryDetail/>
+                  </SalaryDataProvider>
+                  
+                 </AttendanceLoginProvider>
+              } />
               <Route path="/attendance/detail/:id" element={
                 <AttendanceLoginProvider>
                   <LeaveProvider>

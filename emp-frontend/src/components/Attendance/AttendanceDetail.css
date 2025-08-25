@@ -1,0 +1,15 @@
+td, th {
+  min-width: 120px;
+  max-width: 150px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+input[type="time"], input[type="number"] {
+  width: 100%;
+  box-sizing: border-box;
+  font-size: inherit;
+  padding: 0.5em;
+}
+tr {
+  height: 48px; /* or whatever matches your desired row height */
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useAttendanceLoginContext } from "../../context/AttendanceContext";
+import { useSalaryData } from "../../context/SalaryDataContext";
 import {
   Calendar,
   Clock,
@@ -136,50 +137,52 @@ const AttendanceDetail = () => {
   };
 
   // Calculate statistics
- const calculateStats = () => {
-  // Total workdays (exclude weekends and holidays)
-  const totalWorkdays = monthRows.filter(row => !row.isHoliday && !row.isWeekend).length;
+  const calculateStats = () => {
+    // Total workdays (exclude weekends and holidays)
+    const totalWorkdays = monthRows.filter(
+      (row) => !row.isHoliday && !row.isWeekend
+    ).length;
 
-  // Real worked days: days with clockIn and clockOut, excluding holiday/weekends
-  const realWorkedDays = monthRows.filter(row => 
-    !row.isHoliday && 
-    !row.isWeekend && 
-    row.clockIn && 
-    row.clockOut
-  ).length;
+    // Real worked days: days with clockIn and clockOut, excluding holiday/weekends
+    const realWorkedDays = monthRows.filter(
+      (row) => !row.isHoliday && !row.isWeekend && row.clockIn && row.clockOut
+    ).length;
 
-  const present = monthRows.filter(r => r.status === "present").length;
-  const ontime = monthRows.filter(r => r.status === "On Time").length;
-  const absent = monthRows.filter(
-  (r) => r.status === "absent" && !r.isHoliday && !r.isWeekend
-).length;
-  const late = monthRows.filter(r => r.status === "late" && !r.isHoliday && !r.isWeekend).length;
+    const present = monthRows.filter((r) => r.status === "present").length;
+    const ontime = monthRows.filter((r) => r.status === "On Time").length;
+    const absent = monthRows.filter(
+      (r) => r.status === "absent" && !r.isHoliday && !r.isWeekend
+    ).length;
+    const late = monthRows.filter(
+      (r) => r.status === "late" && !r.isHoliday && !r.isWeekend
+    ).length;
 
-  const totalHours = monthRows.reduce((sum, r) => sum + (r.totalHour || 0), 0);
-  const totalOvertime = monthRows.reduce((sum, r) => {
-  if (r.isHoliday || r.isWeekend) {
-    // On holiday or weekend, count all hours as overtime
-    return sum + (r.totalHour || 0);
-  } else {
-    // On regular workday, count only overtime hours
-    return sum + (r.overTime || 0);
-  }
-}, 0);
+    const totalHours = monthRows.reduce(
+      (sum, r) => sum + (r.totalHour || 0),
+      0
+    );
+    const totalOvertime = monthRows.reduce((sum, r) => {
+      if (r.isHoliday || r.isWeekend) {
+        // On holiday or weekend, count all hours as overtime
+        return sum + (r.totalHour || 0);
+      } else {
+        // On regular workday, count only overtime hours
+        return sum + (r.overTime || 0);
+      }
+    }, 0);
 
-
-  return {
-    total: monthRows.length,
-    totalWorkdays,
-    realWorkedDays,
-    present,
-    ontime,
-    absent,
-    late,
-    totalHours,
-    totalOvertime,
+    return {
+      total: monthRows.length,
+      totalWorkdays,
+      realWorkedDays,
+      present,
+      ontime,
+      absent,
+      late,
+      totalHours,
+      totalOvertime,
+    };
   };
-};
-
 
   const getStatusFromRecord = (record) => {
     if (!record.clockIn) return "absent";
@@ -298,7 +301,6 @@ const AttendanceDetail = () => {
     fetchLeaves();
   }, [getLeaves]);
 
- 
   const UpdatePaidLeave = async (employeeId, dateStr) => {
     try {
       // Call backend API to apply leave & increment count
@@ -396,6 +398,11 @@ const AttendanceDetail = () => {
     };
   });
 
+
+  const paidLeavesThisMonth = monthRows.filter(
+    (row) => row.paidleave && !row.isHoliday && !row.isWeekend
+  ).length;
+
   const stats = calculateStats();
 
   if (!employee) {
@@ -408,6 +415,28 @@ const AttendanceDetail = () => {
       </div>
     );
   }
+
+// Add this import
+
+
+const AttendanceDetail = () => {
+  const { updateSalaryData } = useSalaryData();
+  
+  // Add this useEffect to update salary data when stats change
+  useEffect(() => {
+    if (stats && employee) {
+      updateSalaryData({
+        totalWorkdays: stats.totalWorkdays,
+        realWorkedDays: stats.realWorkedDays,
+        appliedPaidLeaves: paidLeavesThisMonth,
+        employeeId: employee.id,
+        date: currentMonth,
+      });
+    }
+  }, [stats, paidLeavesThisMonth, employee, selectedMonth, selectedYear, updateSalaryData]);
+  
+  // ... rest of your component
+}
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -510,6 +539,12 @@ const AttendanceDetail = () => {
                   <span className="font-medium">Remaining :</span>{" "}
                   {remainingLeaves}
                 </p>
+                <p className="text-sm md:text-base">
+                  <span className="font-medium">
+                    Current month paid leave :
+                  </span>{" "}
+                  {paidLeavesThisMonth}
+                </p>
               </div>
             </div>
           </div>
@@ -567,7 +602,7 @@ const AttendanceDetail = () => {
                   Total Worked Days
                 </p>
                 <p className="text-xl md:text-2xl font-bold text-green-900">
-                  {stats.ontime + stats.late} 
+                  {stats.ontime + stats.late}
                 </p>
               </div>
               <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
@@ -581,7 +616,7 @@ const AttendanceDetail = () => {
                   On Time Days
                 </p>
                 <p className="text-xl md:text-2xl font-bold text-green-900">
-                  {stats.ontime} 
+                  {stats.ontime}
                 </p>
               </div>
               <CheckCircle className="h-6 w-6 md:h-8 md:w-8 text-green-600" />
@@ -668,11 +703,11 @@ const AttendanceDetail = () => {
                   <tr
                     key={row.day}
                     className={
-                      (row.isHoliday
+                      row.isHoliday
                         ? "bg-red-100"
                         : row.isWeekend
                         ? "bg-red-100"
-                        : "")
+                        : ""
                     }
                     title={
                       row.isHoliday
@@ -767,43 +802,50 @@ const AttendanceDetail = () => {
                       </div>
                     </td>
                     <td className="px-3 py-2 md:px-4 md:py-3 whitespace-nowrap text-gray-700">
-  {editingRecord?.id === row.id ? (
-    // In edit mode — only show Apply or Cancel if not holiday
-    row.paidleave ? (
-      <button
-        onClick={() => CancelPaidLeave(employee.id, row.date)}
-        className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
-      >
-        Cancel
-      </button>
-    ) : !row.isHoliday && !row.isWeekend ? (
-      <button
-        onClick={() => UpdatePaidLeave(employee.id, row.date)}
-        className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
-      >
-        Apply
-      </button>
-    ) : (
-      <span className="text-gray-400 text-sm italic">-</span>
-    )
-  ) : !row.isHoliday && !row.isWeekend && row.status === "absent" ? (
-    // Normal mode as before
-    <button
-      onClick={() => UpdatePaidLeave(employee.id, row.date)}
-      disabled={row.paidleave}
-      className={`px-3 py-1 md:px-4 md:py-2 rounded-lg ${
-        row.paidleave
-          ? "bg-gray-400 text-white cursor-not-allowed"
-          : "bg-green-600 text-white hover:bg-green-700"
-      }`}
-    >
-      {row.paidleave ? "Applied" : "Apply"}
-    </button>
-  ) : (
-    <span className="text-gray-400 text-sm italic">-</span>
-  )}
-</td>
-
+                      {editingRecord?.id === row.id ? (
+                        // 
+                        row.paidleave ? (
+                          <button
+                            onClick={() =>
+                              CancelPaidLeave(employee.id, row.date)
+                            }
+                            className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                          >
+                            Cancel
+                          </button>
+                        ) : !row.isHoliday && !row.isWeekend && row.status === "absent" ? ( // Only show Apply button on absent workdays and not holiday/weekend
+                          <button
+                            onClick={() =>
+                              UpdatePaidLeave(employee.id, row.date)
+                            }
+                            className="px-3 py-1 md:px-4 md:py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                          >
+                            Apply
+                          </button>
+                        ) : (
+                          <span className="text-gray-400 text-sm italic">
+                            -
+                          </span>
+                        )
+                      ) : !row.isHoliday &&
+                        !row.isWeekend &&
+                        row.status === "absent" ? (
+                        // Normal mode as before
+                        <button
+                          onClick={() => UpdatePaidLeave(employee.id, row.date)}
+                          disabled={row.paidleave}
+                          className={`px-3 py-1 md:px-4 md:py-2 rounded-lg ${
+                            row.paidleave
+                              ? "bg-gray-400 text-white cursor-not-allowed"
+                              : "bg-green-600 text-white hover:bg-green-700"
+                          }`}
+                        >
+                          {row.paidleave ? "Applied" : "Apply"}
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-sm italic">-</span>
+                      )}
+                    </td>
 
                     <td className="px-3 py-2 md:px-4 md:py-3 whitespace-nowrap text-sm font-medium">
                       {editingRecord?.id === row.id ? (

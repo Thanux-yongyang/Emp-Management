@@ -61,12 +61,12 @@ export const Navigation = () => {
 
           <Divider />
           <NavItem to="/salary" icon={<JapaneseYen size={20} />} label="Salary Details" />
-          <NavItem to="/reports" icon={<BarChart2 size={20} />} label="Reports" />
+          {/* <NavItem to="/reports" icon={<BarChart2 size={20} />} label="Reports" /> */}
 
           <Divider />
           <NavItem to="/settings" icon={<Settings size={20} />} label="Account Settings" />
           <Divider />
-          <NavItem to="/clockinout" icon={<Settings size={20} />} label="Clock" />
+          
         </ul>
       </div>
 
